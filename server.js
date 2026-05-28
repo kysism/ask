@@ -18,7 +18,7 @@ app.use("/api/survey-title", require("./routes/surveyTitleRoutes"));
 app.use("/api/survey-item", require("./routes/surveyItemRoutes"));
 app.use("/api/survey-result", require("./routes/surveyResultRoutes"));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 1000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
