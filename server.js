@@ -18,6 +18,18 @@ app.use("/api/org", require("./routes/orgRoutes"));
 // app.use("/api/survey-item", require("./routes/surveyItemRoutes"));
 // app.use("/api/survey-result", require("./routes/surveyResultRoutes"));
 
+/* ROOT EXPLICIT */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/html/login.html"));
+});
+
+/* STATIC BUT NO INDEX OVERRIDE */
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    index: false,
+  }),
+);
+
 const PORT = process.env.PORT || 1000;
 
 app.listen(PORT, () => {

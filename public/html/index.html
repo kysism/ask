@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Survey Admin Main</title>
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/admin_style.css" />
+
+    <style>
+      body {
+        background: linear-gradient(to bottom, #f8fafc, #eef2f7);
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: auto;
+      }
+
+      .main-header {
+        text-align: center;
+        margin-bottom: 34px;
+      }
+
+      .main-header h1 {
+        font-size: 34px;
+        color: #1f2937;
+        margin-bottom: 12px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+
+      .main-header p {
+        color: #6b7280;
+        font-size: 15px;
+      }
+
+      /* =========================
+         STEP MENU
+      ========================= */
+      .step-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .menu-card {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+
+        border-radius: 24px;
+        padding: 24px;
+
+        text-decoration: none;
+        color: #111827;
+
+        border: 1px solid rgba(255, 255, 255, 0.4);
+
+        box-shadow:
+          0 12px 30px rgba(0, 0, 0, 0.05),
+          0 2px 8px rgba(0, 0, 0, 0.03);
+
+        transition: 0.28s ease;
+      }
+
+      .menu-card:hover {
+        transform: translateY(-4px);
+        border-color: #7aa5d1;
+
+        box-shadow:
+          0 18px 35px rgba(0, 0, 0, 0.08),
+          0 4px 10px rgba(122, 165, 209, 0.08);
+      }
+
+      /* STEP NUMBER STYLE */
+      .menu-step {
+        min-width: 64px;
+        height: 64px;
+        border-radius: 20px;
+
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      /* STEP COLORS */
+      .menu-card:nth-child(1) .menu-step {
+        background: linear-gradient(135deg, #d66b6b, #e08a8a);
+      }
+
+      .menu-card:nth-child(2) .menu-step {
+        background: linear-gradient(135deg, #d89a5b, #e7b27c);
+      }
+
+      .menu-card:nth-child(3) .menu-step {
+        background: linear-gradient(135deg, #5f9f7f, #7db79a);
+      }
+
+      .menu-card:nth-child(4) .menu-step {
+        background: linear-gradient(135deg, #5d87b3, #7aa5d1);
+      }
+
+      .menu-card:nth-child(5) .menu-step {
+        background: linear-gradient(135deg, #3f5873, #5c7898);
+      }
+
+      .menu-card:nth-child(6) .menu-step {
+        background: linear-gradient(135deg, #7b8794, #9aa5b1);
+      }
+
+      .menu-content {
+        flex: 1;
+      }
+
+      .menu-content h2 {
+        font-size: 22px;
+        margin-bottom: 8px;
+        color: #111827;
+      }
+
+      .menu-content p {
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.7;
+      }
+
+      .menu-footer {
+        font-size: 14px;
+        color: #274c77;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      /* MOBILE */
+      @media (max-width: 768px) {
+        .main-header h1 {
+          font-size: 26px;
+        }
+
+        .menu-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .menu-content h2 {
+          font-size: 18px;
+        }
+
+        .menu-footer {
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- HEADER -->
+      <div class="main-header">
+        <h1>Survey System Admin | إدارة نظام الاستبيان</h1>
+        <p>Manage surveys step by step | إدارة الاستبيانات خطوة بخطوة</p>
+      </div>
+
+      <!-- STEP MENU -->
+      <div class="step-grid">
+        <a href="/html/admin/admin_org.html" class="menu-card">
+          <div class="menu-step">1</div>
+          <div class="menu-content">
+            <h2>Organization Management | إدارة المؤسسات</h2>
+            <p>
+              Register organizations and locations | تسجيل المؤسسات والمناطق
+            </p>
+          </div>
+          <div class="menu-footer">Open →</div>
+        </a>
+
+        <a href="/html/admin/admin_class.html" class="menu-card">
+          <div class="menu-step">2</div>
+          <div class="menu-content">
+            <h2>Class Management | إدارة الفصول</h2>
+            <p>
+              Register classes for each organization | تسجيل الفصول لكل مؤسسة
+            </p>
+          </div>
+          <div class="menu-footer">Open →</div>
+        </a>
+
+        <a href="/html/admin/admin_student.html" class="menu-card">
+          <div class="menu-step">3</div>
+          <div class="menu-content">
+            <h2>Student Management | إدارة الطلبة</h2>
+            <p>Register and manage students | تسجيل وإدارة الطلبة</p>
+          </div>
+          <div class="menu-footer">Open →</div>
+        </a>
+
+        <a href="/html/admin/admin_survey_title.html" class="menu-card">
+          <div class="menu-step">4</div>
+          <div class="menu-content">
+            <h2>Survey Title Management | إدارة عناوين الاستبيان</h2>
+            <p>
+              Create survey titles and enable usage | إنشاء عناوين الاستبيان
+              وتفعيلها
+            </p>
+          </div>
+          <div class="menu-footer">Open →</div>
+        </a>
+
+        <a href="/html/admin/admin_survey_item.html" class="menu-card">
+          <div class="menu-step">5</div>
+          <div class="menu-content">
+            <h2>Survey Item Management | إدارة أسئلة الاستبيان</h2>
+            <p>
+              Add objective and subjective questions | إضافة الأسئلة الموضوعية
+              والمقالية
+            </p>
+          </div>
+          <div class="menu-footer">Open →</div>
+        </a>
+
+        <a href="/html/admin/admin_survey_view.html" class="menu-card">
+          <div class="menu-step">6</div>
+          <div class="menu-content">
+            <h2>Survey Preview & Share | معاينة ومشاركة الاستبيان</h2>
+            <p>
+              Check survey items and share survey links | مراجعة الأسئلة ومشاركة
+              الروابط
+            </p>
+          </div>
+          <div class="menu-footer">Open →</div>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
