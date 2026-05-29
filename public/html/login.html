@@ -104,7 +104,7 @@
     <div class="card">
       <!-- HEADER -->
       <div class="header">
-        <img src="./img/koica.png" />
+        <img src="/img/koica.png" />
         <h1>KOICA Survey System</h1>
         <div class="subtitle">
           Secure Access Gateway for Authorized Administrators
@@ -133,7 +133,7 @@
     </div>
 
     <script>
-      const API = "https://fcm-61ns.onrender.com/api";
+      const API = "https://ask-21w3.onrender.com/api";
 
       async function generatePassword() {
         const res = await fetch(`${API}/auth/generate`, { method: "POST" });
@@ -176,7 +176,7 @@
         }
 
         sessionStorage.setItem("koica_survey_admin_pwd", password);
-        location.href = "/index.html";
+        location.href = "/html/index.html";
       }
     </script>
   </body>
