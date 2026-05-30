@@ -28,8 +28,9 @@ async function loadOrgs() {
     const res = await fetch(API);
 
     if (!res.ok) {
-      console.log("status:", res.status);
       const text = await res.text();
+
+      console.log("status:", res.status);
       console.log("raw response:", text);
 
       throw new Error("API Load Failed");
@@ -37,9 +38,17 @@ async function loadOrgs() {
 
     const result = await res.json();
 
-    orgs = result.data || [];
+    if (!Array.isArray(result.data)) {
+      throw new Error("Invalid data format");
+    }
 
-    console.log(orgs);
+    orgs = result.data;
+
+    if (orgs.length === 0) {
+      console.log("No data found");
+      render([]);
+      return;
+    }
 
     render();
   } catch (err) {
@@ -56,7 +65,7 @@ function render() {
   let table = "";
   let mobile = "";
 
-  data.forEach((row) => {
+  orgs.forEach((row) => {
     table += `
             <tr>
               <td>${row.org_id}</td>
