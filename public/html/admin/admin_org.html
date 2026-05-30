@@ -28,35 +28,16 @@
 
   <body>
     <div class="container">
-      <!-- FORM -->
       <div class="card">
         <div class="top-bar">
           <h1 class="page-title">Organization Management | إدارة المؤسسات</h1>
 
-          <a
-            href="/"
-            style="
-              padding: 10px 14px;
-              background: #111827;
-              color: white;
-              border-radius: 10px;
-              text-decoration: none;
-              font-size: 13px;
-              white-space: nowrap;
-            "
-          >
-            Home | الرئيسية
-          </a>
+          <a href="/" class="btn-home"> Home | الرئيسية </a>
         </div>
 
         <div class="form-grid">
-          <input
-            id="org_nm"
-            type="text"
-            placeholder="Organization Name | اسم المؤسسة"
-          />
-
-          <input id="org_place" type="text" placeholder="Location | المكان" />
+          <input id="org_nm" type="text" placeholder="Organization Name" />
+          <input id="org_place" type="text" placeholder="Location" />
 
           <button id="saveBtn" class="btn-primary" onclick="saveOrg()">
             Add Organization | إضافة مؤسسة
@@ -68,17 +49,15 @@
         </div>
       </div>
 
-      <!-- LIST -->
       <div class="card">
-        <!-- TABLE -->
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Organization | المؤسسة</th>
-                <th>Location | المكان</th>
-                <th>Action | الإجراءات</th>
+                <th>Organization</th>
+                <th>Location</th>
+                <th>Action</th>
               </tr>
             </thead>
 
@@ -86,11 +65,14 @@
           </table>
         </div>
 
-        <!-- MOBILE -->
         <div id="mobileOrgBody" class="mobile-card"></div>
       </div>
     </div>
 
-    <script type="module" src="../../js/admin/admin_org.js"></script>
+    <!-- COMMON (먼저 로드) -->
+    <script src="/js/common/common.js"></script>
+
+    <!-- MODULE (CRUD) -->
+    <script type="module" src="/js/admin/admin_org.js"></script>
   </body>
 </html>
