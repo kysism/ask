@@ -1,12 +1,22 @@
 const supabase = require("../services/supabaseService");
 
-/* GET ALL */
+/* =========================
+   GET ALL (with JOIN)
+========================= */
 exports.getAll = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("tbl_survey")
-      .select("*")
-      .order("survey_id", { ascending: false });
+    const { survey_id } = req.query;
+
+    let query = supabase
+      .from("tbl_survey_item")
+      .select("*, tbl_survey(survey_title)")
+      .order("survey_item_id", { ascending: false });
+
+    if (survey_id) {
+      query = query.eq("survey_id", Number(survey_id));
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
@@ -19,17 +29,46 @@ exports.getAll = async (req, res) => {
   }
 };
 
-/* CREATE */
-exports.create = async (req, res) => {
+/* =========================
+   GET ONE
+========================= */
+exports.getOne = async (req, res) => {
   try {
-    const { survey_title, use_yn } = req.body;
+    const { id } = req.params;
 
     const { data, error } = await supabase
-      .from("tbl_survey")
+      .from("tbl_survey_item")
+      .select("*")
+      .eq("survey_item_id", Number(id))
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+/* =========================
+   CREATE
+========================= */
+exports.create = async (req, res) => {
+  try {
+    const { survey_id, survey_item, survey_item_type, survey_item_mandatory } =
+      req.body;
+
+    const { data, error } = await supabase
+      .from("tbl_survey_item")
       .insert([
         {
-          survey_title,
-          use_yn: use_yn ?? true,
+          survey_id: Number(survey_id),
+          survey_item,
+          survey_item_type,
+          survey_item_mandatory,
         },
       ])
       .select();
@@ -45,20 +84,25 @@ exports.create = async (req, res) => {
   }
 };
 
-/* UPDATE */
+/* =========================
+   UPDATE
+========================= */
 exports.update = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { survey_title, use_yn } = req.body;
+    const { survey_id, survey_item, survey_item_type, survey_item_mandatory } =
+      req.body;
 
     const { data, error } = await supabase
-      .from("tbl_survey")
+      .from("tbl_survey_item")
       .update({
-        survey_title,
-        use_yn,
+        survey_id: Number(survey_id),
+        survey_item,
+        survey_item_type,
+        survey_item_mandatory,
       })
-      .eq("survey_id", Number(id))
+      .eq("survey_item_id", Number(id))
       .select();
 
     if (error) throw error;
@@ -72,15 +116,17 @@ exports.update = async (req, res) => {
   }
 };
 
-/* DELETE */
+/* =========================
+   DELETE
+========================= */
 exports.remove = async (req, res) => {
   try {
     const { id } = req.params;
 
     const { error } = await supabase
-      .from("tbl_survey")
+      .from("tbl_survey_item")
       .delete()
-      .eq("survey_id", Number(id));
+      .eq("survey_item_id", Number(id));
 
     if (error) throw error;
 

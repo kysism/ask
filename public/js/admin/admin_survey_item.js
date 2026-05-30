@@ -3,7 +3,9 @@ const SURVEY_API = "/api/survey-title";
 
 let editItemId = null;
 
-/* LOAD SURVEY */
+/* =========================
+   LOAD SURVEY LIST
+========================= */
 async function loadSurvey() {
   const res = await fetch(SURVEY_API);
   const result = await res.json();
@@ -19,7 +21,9 @@ async function loadSurvey() {
   document.getElementById("survey_id").innerHTML = html;
 }
 
-/* LOAD ITEMS */
+/* =========================
+   LOAD ITEMS
+========================= */
 async function loadItem() {
   const survey_id = document.getElementById("survey_id").value;
 
@@ -34,12 +38,6 @@ async function loadItem() {
   let html = "";
 
   data.forEach((r) => {
-    const typeLabel = r.survey_item_type === "S" ? "Select" : "Input";
-
-    const requiredLabel = r.survey_item_mandatory
-      ? `<span class="required-badge">Required</span>`
-      : `<span class="optional-badge">Optional</span>`;
-
     html += `
       <tr>
         <td>${r.survey_item_id}</td>
@@ -49,15 +47,18 @@ async function loadItem() {
         <td>${r.survey_item}</td>
 
         <td>
-          <span class="type-badge">${typeLabel}</span>
+          ${r.survey_item_type === "S" ? "Select" : "Input"}
         </td>
 
-        <td>${requiredLabel}</td>
+        <td>
+          ${r.survey_item_mandatory ? "Required" : "Optional"}
+        </td>
 
         <td>
           <button class="btn-warning edit-btn" data-id="${r.survey_item_id}">
             Edit
           </button>
+
           <button class="btn-danger delete-btn" data-id="${r.survey_item_id}">
             Delete
           </button>
@@ -69,11 +70,18 @@ async function loadItem() {
   document.getElementById("itemBody").innerHTML = html;
 }
 
-/* EVENT */
+/* =========================
+   EVENT (FIXED)
+========================= */
 document.addEventListener("click", async (e) => {
-  const id = e.target.dataset.id;
+  const btn = e.target.closest("button");
+  if (!btn) return;
 
-  if (e.target.classList.contains("edit-btn")) {
+  const id = btn.dataset.id;
+  if (!id) return;
+
+  /* EDIT */
+  if (btn.classList.contains("edit-btn")) {
     const res = await fetch(`${API}/${id}`);
     const result = await res.json();
 
@@ -88,16 +96,16 @@ document.addEventListener("click", async (e) => {
     );
   }
 
-  if (e.target.classList.contains("delete-btn")) {
+  /* DELETE */
+  if (btn.classList.contains("delete-btn")) {
     await fetch(`${API}/${id}`, { method: "DELETE" });
-
-    if (editItemId === id) resetForm();
-
     loadItem();
   }
 });
 
-/* SAVE */
+/* =========================
+   SAVE
+========================= */
 async function saveItem() {
   const survey_id = document.getElementById("survey_id").value;
   const survey_item = document.getElementById("survey_item").value.trim();
@@ -109,27 +117,24 @@ async function saveItem() {
 
   let res;
 
+  const payload = {
+    survey_id,
+    survey_item,
+    survey_item_type,
+    survey_item_mandatory,
+  };
+
   if (editItemId) {
     res = await fetch(`${API}/${editItemId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        survey_id,
-        survey_item,
-        survey_item_type,
-        survey_item_mandatory,
-      }),
+      body: JSON.stringify(payload),
     });
   } else {
     res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        survey_id,
-        survey_item,
-        survey_item_type,
-        survey_item_mandatory,
-      }),
+      body: JSON.stringify(payload),
     });
   }
 
@@ -141,7 +146,9 @@ async function saveItem() {
   loadItem();
 }
 
-/* EDIT */
+/* =========================
+   EDIT
+========================= */
 function editItem(id, item, survey_id, type, mandatory) {
   editItemId = id;
 
@@ -154,10 +161,12 @@ function editItem(id, item, survey_id, type, mandatory) {
   btn.innerText = "Update Item";
   btn.classList.add("btn-success");
 
-  window.scrollTo({ top: 0 });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/* RESET */
+/* =========================
+   RESET
+========================= */
 function resetForm() {
   editItemId = null;
 
@@ -170,6 +179,9 @@ function resetForm() {
   btn.classList.remove("btn-success");
 }
 
+/* =========================
+   INIT
+========================= */
 document.getElementById("survey_id").addEventListener("change", loadItem);
 
 loadSurvey();
