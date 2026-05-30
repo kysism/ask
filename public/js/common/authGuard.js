@@ -5,33 +5,31 @@
     return location.pathname.includes("login.html");
   }
 
-  function isPublicPage() {
-    return (
-      location.pathname.includes("/client/") ||
-      location.pathname.includes("survey_view.html")
-    );
+  function hasValidSession() {
+    const token = sessionStorage.getItem(KEY);
+    return token && token.length > 0;
   }
 
-  function checkAuth() {
-    try {
-      // 로그인 페이지는 무조건 제외
-      if (isLoginPage()) return;
-
-      // 공개 페이지도 제외 (설문 응답 등)
-      if (isPublicPage()) return;
-
-      const token = sessionStorage.getItem(KEY);
-
-      if (!token) {
-        // redirect loop 방지
-        if (!location.pathname.includes("login.html")) {
-          location.replace("/html/login.html");
-        }
-      }
-    } catch (err) {
-      console.error("authGuard error:", err);
+  function redirectToLogin() {
+    if (!location.pathname.includes("/html/login.html")) {
+      location.href = "/html/login.html";
     }
   }
 
-  checkAuth();
+  function initAuthGuard() {
+    // login 페이지는 검사 제외
+    if (isLoginPage()) return;
+
+    // 세션 없으면 즉시 이동
+    if (!hasValidSession()) {
+      redirectToLogin();
+    }
+  }
+
+  // DOM 로딩 후 실행 (튕김 방지 핵심)
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAuthGuard);
+  } else {
+    initAuthGuard();
+  }
 })();
