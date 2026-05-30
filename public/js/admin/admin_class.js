@@ -1,263 +1,148 @@
-let classes = [];
-let editClassId = null;
+let students = [];
+let editStudentId = null;
 
+const API = "/api/student";
 const CLASS_API = "/api/class";
-const ORG_API = "/api/org";
-
-// =========================
-// LOAD ORG
-// =========================
-async function loadOrg() {
-  try {
-    const res = await fetch(ORG_API);
-
-    const result = await res.json();
-
-    let html = `
-      <option value="">
-        Select Organization
-      </option>
-    `;
-
-    (result.data || []).forEach((row) => {
-      html += `
-        <option value="${row.org_id}">
-          ${row.org_nm}
-        </option>
-      `;
-    });
-
-    document.getElementById("org_id").innerHTML = html;
-  } catch (err) {
-    console.error(err);
-  }
-}
 
 // =========================
 // LOAD CLASS
 // =========================
 async function loadClass() {
-  try {
-    const orgId = document.getElementById("org_id").value;
+  const res = await fetch(CLASS_API);
+  const result = await res.json();
 
-    let url = CLASS_API;
+  let html = `<option value="">Select Class</option>`;
 
-    if (orgId) {
-      url += `?org_id=${orgId}`;
-    }
+  (result.data || []).forEach((c) => {
+    html += `<option value="${c.class_id}">${c.class_nm}</option>`;
+  });
 
-    const res = await fetch(url);
+  document.getElementById("class_id").innerHTML = html;
+}
 
-    const result = await res.json();
+// =========================
+// LOAD STUDENT
+// =========================
+async function loadStudent() {
+  const classId = document.getElementById("class_id").value;
 
-    classes = result.data || [];
+  let url = API;
+  if (classId) url += `?class_id=${classId}`;
 
-    render();
-  } catch (err) {
-    console.error(err);
-  }
+  const res = await fetch(url);
+  const result = await res.json();
+
+  students = result.data || [];
+  render();
 }
 
 // =========================
 // RENDER
 // =========================
 function render() {
-  let tableHtml = "";
-  let mobileHtml = "";
+  let html = "";
 
-  classes.forEach((row) => {
-    const classNm = JSON.stringify(row.class_nm || "");
-    const orgId = JSON.stringify(row.org_id || "");
-
-    tableHtml += `
+  students.forEach((s) => {
+    html += `
       <tr>
-        <td>${row.class_id}</td>
-
-        <td>${row.tbl_org?.org_nm ?? "-"}</td>
-
-        <td>${row.class_nm}</td>
-
+        <td>${s.student_id}</td>
+        <td>${s.tbl_class?.class_nm ?? "-"}</td>
+        <td>${s.student_nm}</td>
         <td>
-          <button
-            class="btn-warning btn-sm"
-            onclick='editClass(
-              ${row.class_id},
-              ${classNm},
-              ${orgId}
-            )'
-          >
+          <button class="btn-warning btn-sm"
+            onclick="editStudent(${s.student_id}, '${s.student_nm}', ${s.class_id})">
             Edit
           </button>
 
-          <button
-            class="btn-danger btn-sm"
-            onclick="deleteClass(${row.class_id})"
-          >
+          <button class="btn-danger btn-sm"
+            onclick="deleteStudent(${s.student_id})">
             Delete
           </button>
         </td>
       </tr>
     `;
-
-    mobileHtml += `
-      <div class="mobile-item">
-
-        <h3>${row.class_nm}</h3>
-
-        <p>
-          <b>ID :</b> ${row.class_id}
-        </p>
-
-        <p>
-          <b>Organization :</b>
-          ${row.tbl_org?.org_nm ?? "-"}
-        </p>
-
-        <div class="action-buttons">
-
-          <button
-            class="btn-warning btn-sm"
-            onclick='editClass(
-              ${row.class_id},
-              ${classNm},
-              ${orgId}
-            )'
-          >
-            Edit
-          </button>
-
-          <button
-            class="btn-danger btn-sm"
-            onclick="deleteClass(${row.class_id})"
-          >
-            Delete
-          </button>
-
-        </div>
-
-      </div>
-    `;
   });
 
-  document.getElementById("classBody").innerHTML = tableHtml;
-  document.getElementById("mobileClassBody").innerHTML = mobileHtml;
+  document.getElementById("studentBody").innerHTML = html;
 }
 
 // =========================
 // SAVE
 // =========================
-async function saveClass() {
-  const org_id = document.getElementById("org_id").value;
-  const class_nm = document.getElementById("class_nm").value.trim();
+async function saveStudent() {
+  const class_id = document.getElementById("class_id").value;
+  const student_nm = document.getElementById("student_nm").value.trim();
 
-  if (!org_id) {
-    alert("Select Organization");
-    return;
+  if (!class_id || !student_nm) return alert("Fill all fields");
+
+  let res;
+
+  if (editStudentId) {
+    res = await fetch(`${API}/${editStudentId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ class_id, student_nm }),
+    });
+  } else {
+    res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ class_id, student_nm }),
+    });
   }
 
-  if (!class_nm) {
-    alert("Enter Class Name");
-    return;
-  }
+  const result = await res.json();
 
-  try {
-    let res;
+  if (!result.success) return alert(result.message);
 
-    if (editClassId) {
-      res = await fetch(`${CLASS_API}/${editClassId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          org_id,
-          class_nm,
-        }),
-      });
-    } else {
-      res = await fetch(CLASS_API, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          org_id,
-          class_nm,
-        }),
-      });
-    }
-
-    const result = await res.json();
-
-    if (!result.success) {
-      throw new Error(result.message);
-    }
-
-    resetForm();
-    await loadClass();
-  } catch (err) {
-    alert(err.message);
-  }
+  resetForm();
+  loadStudent();
 }
 
 // =========================
 // EDIT
 // =========================
-function editClass(id, class_nm, org_id) {
-  editClassId = id;
+function editStudent(id, name, class_id) {
+  editStudentId = id;
 
-  document.getElementById("class_nm").value = class_nm;
-  document.getElementById("org_id").value = org_id;
-
-  document.getElementById("saveBtn").innerText = "Update Class";
+  document.getElementById("student_nm").value = name;
+  document.getElementById("class_id").value = class_id;
 }
 
 // =========================
 // DELETE
 // =========================
-async function deleteClass(id) {
+async function deleteStudent(id) {
   if (!confirm("Delete?")) return;
 
-  const res = await fetch(`${CLASS_API}/${id}`, {
-    method: "DELETE",
-  });
-
+  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
   const result = await res.json();
 
-  if (!result.success) {
-    alert(result.message);
-    return;
-  }
+  if (!result.success) return alert(result.message);
 
-  await loadClass();
+  loadStudent();
 }
 
 // =========================
 // RESET
 // =========================
 function resetForm() {
-  editClassId = null;
-
-  document.getElementById("class_nm").value = "";
-
-  document.getElementById("saveBtn").innerText = "Add Class | إضافة فصل";
+  editStudentId = null;
+  document.getElementById("student_nm").value = "";
 }
 
 // =========================
-// EVENT
+// EVENTS
 // =========================
-document.getElementById("org_id").addEventListener("change", loadClass);
-
-// =========================
-// WINDOW
-// =========================
-window.saveClass = saveClass;
-window.editClass = editClass;
-window.deleteClass = deleteClass;
-window.resetForm = resetForm;
+document.getElementById("class_id").addEventListener("change", loadStudent);
 
 // =========================
 // INIT
 // =========================
-loadOrg();
 loadClass();
+loadStudent();
+
+window.saveStudent = saveStudent;
+window.editStudent = editStudent;
+window.deleteStudent = deleteStudent;
+window.resetForm = resetForm;
