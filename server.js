@@ -18,7 +18,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/org", require("./routes/orgRoutes"));
 app.use("/api/class", require("./routes/classRoutes"));
 app.use("/api/student", require("./routes/studentRoutes"));
-// app.use("/api/survey-title", require("./routes/surveyTitleRoutes"));
+app.use("/api/survey-title", require("./routes/surveyTitleRoutes"));
 // app.use("/api/survey-item", require("./routes/surveyItemRoutes"));
 // app.use("/api/survey-result", require("./routes/surveyResultRoutes"));
 

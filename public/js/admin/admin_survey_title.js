@@ -1,127 +1,97 @@
-import { supabase } from "../../js/common/supabaseClient.js";
-
 let editSurveyId = null;
 
-/* =========================================
-         LOAD SURVEY
-      ========================================= */
-window.loadSurvey = async function () {
-  const { data, error } = await supabase
-    .from("tbl_survey")
-    .select("*")
-    .order("survey_id", {
-      ascending: false,
-    });
+const API = "/api/survey";
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+// =========================
+// LOAD
+// =========================
+async function loadSurvey() {
+  try {
+    const res = await fetch(API);
+    const result = await res.json();
 
-  let table = "";
-  let mobile = "";
+    if (!result.success) throw new Error(result.message);
 
-  data.forEach((row) => {
-    const statusBadge = row.use_yn
-      ? `<span class="status-on">Active | مفعل</span>`
-      : `<span class="status-off">Inactive | غير مفعل</span>`;
+    const data = result.data || [];
 
-    table += `
-            <tr>
+    let table = "";
+    let mobile = "";
 
-              <td>
-                ${row.survey_id}
-              </td>
+    data.forEach((row) => {
+      const status = row.use_yn
+        ? `<span class="status-on">Active | مفعل</span>`
+        : `<span class="status-off">Inactive | غير مفعل</span>`;
 
-              <td>
-                ${row.survey_title}
-              </td>
+      const title = JSON.stringify(row.survey_title || "");
 
-              <td>
-                ${statusBadge}
-              </td>
+      table += `
+        <tr>
+          <td>${row.survey_id}</td>
+          <td>${row.survey_title}</td>
+          <td>${status}</td>
+          <td>
+            <div class="action-buttons">
 
-              <td>
+              <button
+                class="btn-warning btn-sm"
+                onclick="editSurvey(${row.survey_id}, ${title}, ${row.use_yn})"
+              >
+                Edit | تعديل
+              </button>
 
-                <div class="action-buttons">
-
-                  <button
-                    class="btn-warning btn-sm"
-                    onclick="editSurvey(
-                      ${row.survey_id},
-                      \`${row.survey_title}\`,
-                      ${row.use_yn}
-                    )"
-                  >
-                    Edit | تعديل
-                  </button>
-
-                  <button
-                    class="btn-danger btn-sm"
-                    onclick="deleteSurvey(${row.survey_id})"
-                  >
-                    Delete | حذف
-                  </button>
-
-                </div>
-
-              </td>
-
-            </tr>
-          `;
-
-    mobile += `
-            <div class="mobile-item">
-
-              <h3>
-                ${row.survey_title}
-              </h3>
-
-              <p>
-                <strong>ID :</strong>
-                ${row.survey_id}
-              </p>
-
-              <p>
-                <strong>Status :</strong>
-                ${statusBadge}
-              </p>
-
-              <div class="action-buttons">
-
-                <button
-                  class="btn-warning btn-sm"
-                  onclick="editSurvey(
-                    ${row.survey_id},
-                    \`${row.survey_title}\`,
-                    ${row.use_yn}
-                  )"
-                >
-                  Edit | تعديل
-                </button>
-
-                <button
-                  class="btn-danger btn-sm"
-                  onclick="deleteSurvey(${row.survey_id})"
-                >
-                  Delete | حذف
-                </button>
-
-              </div>
+              <button
+                class="btn-danger btn-sm"
+                onclick="deleteSurvey(${row.survey_id})"
+              >
+                Delete | حذف
+              </button>
 
             </div>
-          `;
-  });
+          </td>
+        </tr>
+      `;
 
-  document.getElementById("surveyBody").innerHTML = table;
+      mobile += `
+        <div class="mobile-item">
+          <h3>${row.survey_title}</h3>
 
-  document.getElementById("mobileSurveyBody").innerHTML = mobile;
-};
+          <p><strong>ID :</strong> ${row.survey_id}</p>
 
-/* =========================================
-         SAVE
-      ========================================= */
-window.saveSurvey = async function () {
+          <p><strong>Status :</strong> ${status}</p>
+
+          <div class="action-buttons">
+
+            <button
+              class="btn-warning btn-sm"
+              onclick="editSurvey(${row.survey_id}, ${title}, ${row.use_yn})"
+            >
+              Edit | تعديل
+            </button>
+
+            <button
+              class="btn-danger btn-sm"
+              onclick="deleteSurvey(${row.survey_id})"
+            >
+              Delete | حذف
+            </button>
+
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById("surveyBody").innerHTML = table;
+    document.getElementById("mobileSurveyBody").innerHTML = mobile;
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+}
+
+// =========================
+// SAVE (CREATE / UPDATE)
+// =========================
+async function saveSurvey() {
   const survey_title = document.getElementById("survey_title").value.trim();
 
   const use_yn = document.getElementById("use_yn").checked;
@@ -131,113 +101,113 @@ window.saveSurvey = async function () {
     return;
   }
 
-  /* UPDATE */
-  if (editSurveyId) {
-    const { error } = await supabase
-      .from("tbl_survey")
-      .update({
-        survey_title,
-        use_yn,
-      })
-      .eq("survey_id", editSurveyId);
+  try {
+    let res;
 
-    if (error) {
-      console.error(error);
-      alert("Update failed | فشل التعديل");
-      return;
+    if (editSurveyId) {
+      res = await fetch(`${API}/${editSurveyId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          survey_title,
+          use_yn,
+        }),
+      });
+    } else {
+      res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          survey_title,
+          use_yn,
+        }),
+      });
     }
 
-    alert("Updated successfully | تم التعديل");
-  } else {
-    /* INSERT */
-    const { error } = await supabase.from("tbl_survey").insert([
-      {
-        survey_title,
-        use_yn,
-      },
-    ]);
+    const result = await res.json();
 
-    if (error) {
-      console.error(error);
-      alert("Insert failed | فشل الإضافة");
-      return;
-    }
+    if (!result.success) throw new Error(result.message);
 
-    alert("Added successfully | تمت الإضافة");
+    resetForm();
+    await loadSurvey();
+
+    alert(editSurveyId ? "Updated" : "Added");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
+}
 
-  resetForm();
-  loadSurvey();
-};
-
-/* =========================================
-         EDIT
-      ========================================= */
-window.editSurvey = function (id, title, use_yn) {
+// =========================
+// EDIT
+// =========================
+function editSurvey(id, title, use_yn) {
   editSurveyId = id;
 
   document.getElementById("survey_title").value = title;
-
   document.getElementById("use_yn").checked = use_yn;
 
   const btn = document.getElementById("saveBtn");
 
   btn.innerText = "Update Survey | تعديل الاستبيان";
-
   btn.classList.remove("btn-primary");
-
   btn.classList.add("btn-success");
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
-};
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-/* =========================================
-         DELETE
-      ========================================= */
-window.deleteSurvey = async function (id) {
-  const ok = confirm("Delete survey? | حذف الاستبيان؟");
+// =========================
+// DELETE
+// =========================
+async function deleteSurvey(id) {
+  if (!confirm("Delete survey? | حذف الاستبيان؟")) return;
 
-  if (!ok) return;
+  try {
+    const res = await fetch(`${API}/${id}`, {
+      method: "DELETE",
+    });
 
-  const { error } = await supabase
-    .from("tbl_survey")
-    .delete()
-    .eq("survey_id", id);
+    const result = await res.json();
 
-  if (error) {
-    console.error(error);
-    alert("Delete failed | فشل الحذف");
-    return;
+    if (!result.success) throw new Error(result.message);
+
+    // ⭐ 삭제 후 현재 편집중이면 초기화
+    if (editSurveyId === id) resetForm();
+
+    await loadSurvey();
+
+    alert("Deleted");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
+}
 
-  alert("Deleted successfully | تم الحذف");
-
-  loadSurvey();
-};
-
-/* =========================================
-         RESET
-      ========================================= */
-window.resetForm = function () {
+// =========================
+// RESET (핵심)
+// =========================
+function resetForm() {
   editSurveyId = null;
 
   document.getElementById("survey_title").value = "";
-
   document.getElementById("use_yn").checked = true;
 
   const btn = document.getElementById("saveBtn");
 
   btn.innerText = "Add Survey | إضافة استبيان";
-
   btn.classList.remove("btn-success");
-
   btn.classList.add("btn-primary");
-};
+}
 
-/* =========================================
-         INIT
-      ========================================= */
+// =========================
+// EXPORT
+// =========================
+window.saveSurvey = saveSurvey;
+window.editSurvey = editSurvey;
+window.deleteSurvey = deleteSurvey;
+window.resetForm = resetForm;
+
+// =========================
+// INIT
+// =========================
 loadSurvey();
