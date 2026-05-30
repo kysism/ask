@@ -131,16 +131,16 @@ function resetForm() {
   document.getElementById("student_nm").value = "";
 }
 
-// =========================
-// EVENTS
-// =========================
-document.getElementById("class_id").addEventListener("change", loadStudent);
+document.addEventListener("DOMContentLoaded", () => {
+  const el = document.getElementById("class_id");
 
-// =========================
-// INIT
-// =========================
-loadClass();
-loadStudent();
+  if (el) {
+    el.addEventListener("change", loadStudent);
+  }
+
+  loadClass();
+  loadStudent();
+});
 
 window.saveStudent = saveStudent;
 window.editStudent = editStudent;
