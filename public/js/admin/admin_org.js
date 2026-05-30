@@ -27,9 +27,12 @@ async function loadOrgs() {
   try {
     const res = await fetch(API);
 
-    if (!res.ok) {
-      throw new Error("API Load Failed");
-    }
+    console.log("status:", res.status);
+
+    const text = await res.text();
+    console.log("raw response:", text);
+
+    const result = JSON.parse(text);
 
     const result = await res.json();
 
