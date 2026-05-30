@@ -1,6 +1,6 @@
 let editSurveyId = null;
 
-const API = "/api/survey";
+const API = "/api/survey-title";
 
 // =========================
 // LOAD
