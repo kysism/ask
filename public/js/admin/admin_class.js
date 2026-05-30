@@ -1,144 +1,216 @@
-let classes = [];
-let editClassId = null;
+let orgs = [];
+let editOrgId = null;
+let saving = false;
 
-const API = "/api/class";
-const ORG_API = "/api/org";
-
-// =========================
-// LOAD ORG
-// =========================
-async function loadOrg() {
-  const res = await fetch(ORG_API);
-  const result = await res.json();
-
-  let html = `<option value="">Select Organization</option>`;
-
-  (result.data || []).forEach((o) => {
-    html += `<option value="${o.org_id}">${o.org_nm}</option>`;
-  });
-
-  document.getElementById("org_id").innerHTML = html;
-}
+const API = "/api/org";
 
 // =========================
-// LOAD CLASS
+// LOAD
 // =========================
-async function loadClass() {
-  const res = await fetch(API);
-  const result = await res.json();
+async function loadOrgs() {
+  try {
+    const res = await fetch(API);
 
-  classes = result?.data || [];
-  render();
+    const result = await res.json();
+
+    if (!result.success) {
+      throw new Error(result.message || "Load Failed");
+    }
+
+    orgs = result.data || [];
+
+    render();
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
 }
 
 // =========================
 // RENDER
 // =========================
 function render() {
-  const tbody = document.getElementById("classBody");
-  if (!tbody) return;
-
   let html = "";
 
-  classes.forEach((c) => {
+  if (orgs.length === 0) {
+    html = `
+      <tr>
+        <td colspan="4" style="text-align:center">
+          No Data
+        </td>
+      </tr>
+    `;
+  }
+
+  orgs.forEach((o) => {
+    const safeName = JSON.stringify(o.org_nm || "");
+    const safePlace = JSON.stringify(o.org_place || "");
+
     html += `
       <tr>
-        <td>${c.class_id}</td>
-        <td>${c.tbl_org?.org_nm ?? "-"}</td>
-        <td>${c.class_nm}</td>
+        <td>${o.org_id}</td>
+
+        <td>${o.org_nm}</td>
+
+        <td>${o.org_place || "-"}</td>
+
         <td>
-          <button class="btn-warning btn-sm"
-            onclick="editClass(${c.class_id}, '${c.class_nm}', ${c.org_id})">
+
+          <button
+            class="btn-warning btn-sm"
+            onclick='editOrg(${o.org_id}, ${safeName}, ${safePlace})'
+          >
             Edit
           </button>
 
-          <button class="btn-danger btn-sm"
-            onclick="deleteClass(${c.class_id})">
+          <button
+            class="btn-danger btn-sm"
+            onclick="deleteOrg(${o.org_id})"
+          >
             Delete
           </button>
+
         </td>
       </tr>
     `;
   });
 
-  tbody.innerHTML = html;
+  document.getElementById("orgBody").innerHTML = html;
 }
 
 // =========================
 // SAVE
 // =========================
-async function saveClass() {
-  const org_id = document.getElementById("org_id").value;
-  const class_nm = document.getElementById("class_nm").value.trim();
+async function saveOrg() {
+  if (saving) return;
 
-  if (!org_id || !class_nm) return alert("Fill all fields");
+  const org_nm = document.getElementById("org_nm").value.trim();
+  const org_place = document.getElementById("org_place").value.trim();
 
-  let res;
-
-  if (editClassId) {
-    res = await fetch(`${API}/${editClassId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id, class_nm }),
-    });
-  } else {
-    res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ org_id, class_nm }),
-    });
+  if (!org_nm) {
+    alert("Organization Name required");
+    return;
   }
 
-  const result = await res.json();
+  saving = true;
 
-  if (!result.success) return alert(result.message);
+  try {
+    let res;
 
-  resetForm();
-  loadClass();
+    // UPDATE
+    if (editOrgId) {
+      res = await fetch(`${API}/${editOrgId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          org_nm,
+          org_place,
+        }),
+      });
+    }
+
+    // INSERT
+    else {
+      res = await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          org_nm,
+          org_place,
+        }),
+      });
+    }
+
+    const result = await res.json();
+
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    resetForm();
+
+    await loadOrgs();
+
+    alert("Saved");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  } finally {
+    saving = false;
+  }
 }
 
 // =========================
 // EDIT
 // =========================
-function editClass(id, name, org_id) {
-  editClassId = id;
+function editOrg(id, name, place) {
+  console.log("EDIT", id, name, place);
 
-  document.getElementById("class_nm").value = name;
-  document.getElementById("org_id").value = org_id;
+  editOrgId = id;
+
+  document.getElementById("org_nm").value = name || "";
+  document.getElementById("org_place").value = place || "";
+
+  const btn = document.getElementById("saveBtn");
+
+  btn.innerText = "Update Organization";
 }
 
 // =========================
 // DELETE
 // =========================
-async function deleteClass(id) {
-  if (!confirm("Delete?")) return;
+async function deleteOrg(id) {
+  if (!confirm("Delete Organization?")) return;
 
-  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
-  const result = await res.json();
+  try {
+    const res = await fetch(`${API}/${id}`, {
+      method: "DELETE",
+    });
 
-  if (!result.success) return alert(result.message);
+    const result = await res.json();
 
-  loadClass();
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    if (editOrgId === id) {
+      resetForm();
+    }
+
+    await loadOrgs();
+
+    alert("Deleted");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
 }
 
 // =========================
 // RESET
 // =========================
 function resetForm() {
-  editClassId = null;
-  document.getElementById("class_nm").value = "";
-  document.getElementById("org_id").value = "";
+  editOrgId = null;
+
+  document.getElementById("org_nm").value = "";
+  document.getElementById("org_place").value = "";
+
+  const btn = document.getElementById("saveBtn");
+
+  btn.innerText = "Add Organization | إضافة مؤسسة";
 }
 
 // =========================
-// INIT (SAFE)
+// MODULE EXPORT TO WINDOW
 // =========================
-document.addEventListener("DOMContentLoaded", () => {
-  loadOrg();
-  loadClass();
-});
-
-window.saveClass = saveClass;
-window.editClass = editClass;
-window.deleteClass = deleteClass;
+window.saveOrg = saveOrg;
+window.editOrg = editOrg;
+window.deleteOrg = deleteOrg;
 window.resetForm = resetForm;
+
+// INIT
+loadOrgs();
