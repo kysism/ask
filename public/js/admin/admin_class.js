@@ -1,28 +1,60 @@
-let orgs = [];
-let editOrgId = null;
+let classes = [];
+let editClassId = null;
 let saving = false;
 
-const API = "/api/org";
+const API = "/api/class";
+const ORG_API = "/api/org";
 
 // =========================
-// LOAD
+// INIT (핵심 수정)
 // =========================
-async function loadOrgs() {
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+});
+
+function init() {
+  loadOrg();
+  loadClass();
+}
+
+// =========================
+// LOAD ORG
+// =========================
+async function loadOrg() {
   try {
-    const res = await fetch(API);
-
+    const res = await fetch(ORG_API);
     const result = await res.json();
 
-    if (!result.success) {
-      throw new Error(result.message || "Load Failed");
-    }
+    const data = result.data || [];
 
-    orgs = result.data || [];
+    let html = `<option value="">Select Organization</option>`;
+
+    data.forEach((o) => {
+      html += `<option value="${o.org_id}">${o.org_nm}</option>`;
+    });
+
+    const el = document.getElementById("org_id");
+    if (!el) return;
+
+    el.innerHTML = html;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// =========================
+// LOAD CLASS
+// =========================
+async function loadClass() {
+  try {
+    const res = await fetch(API);
+    const result = await res.json();
+
+    classes = result.data || [];
 
     render();
   } catch (err) {
     console.error(err);
-    alert(err.message);
   }
 }
 
@@ -30,65 +62,58 @@ async function loadOrgs() {
 // RENDER
 // =========================
 function render() {
+  const body = document.getElementById("classBody");
+  if (!body) return;
+
   let html = "";
 
-  if (orgs.length === 0) {
+  if (!classes.length) {
     html = `
       <tr>
-        <td colspan="4" style="text-align:center">
-          No Data
-        </td>
+        <td colspan="4" style="text-align:center">No Data</td>
       </tr>
     `;
   }
 
-  orgs.forEach((o) => {
-    const safeName = JSON.stringify(o.org_nm || "");
-    const safePlace = JSON.stringify(o.org_place || "");
+  classes.forEach((c) => {
+    const safeName = JSON.stringify(c.class_nm || "");
 
     html += `
       <tr>
-        <td>${o.org_id}</td>
-
-        <td>${o.org_nm}</td>
-
-        <td>${o.org_place || "-"}</td>
-
+        <td>${c.class_id}</td>
+        <td>${c.tbl_org?.org_nm ?? "-"}</td>
+        <td>${c.class_nm}</td>
         <td>
-
           <button
             class="btn-warning btn-sm"
-            onclick='editOrg(${o.org_id}, ${safeName}, ${safePlace})'
-          >
+            onclick='editClass(${c.class_id}, ${safeName}, ${c.org_id})'>
             Edit
           </button>
 
           <button
             class="btn-danger btn-sm"
-            onclick="deleteOrg(${o.org_id})"
-          >
+            onclick="deleteClass(${c.class_id})">
             Delete
           </button>
-
         </td>
       </tr>
     `;
   });
 
-  document.getElementById("orgBody").innerHTML = html;
+  body.innerHTML = html;
 }
 
 // =========================
-// SAVE
+// SAVE (CREATE / UPDATE)
 // =========================
-async function saveOrg() {
+async function saveClass() {
   if (saving) return;
 
-  const org_nm = document.getElementById("org_nm").value.trim();
-  const org_place = document.getElementById("org_place").value.trim();
+  const org_id = document.getElementById("org_id")?.value;
+  const class_nm = document.getElementById("class_nm")?.value.trim();
 
-  if (!org_nm) {
-    alert("Organization Name required");
+  if (!org_id || !class_nm) {
+    alert("Fill all fields");
     return;
   }
 
@@ -97,45 +122,26 @@ async function saveOrg() {
   try {
     let res;
 
-    // UPDATE
-    if (editOrgId) {
-      res = await fetch(`${API}/${editOrgId}`, {
+    if (editClassId) {
+      res = await fetch(`${API}/${editClassId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          org_nm,
-          org_place,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ org_id, class_nm }),
       });
-    }
-
-    // INSERT
-    else {
+    } else {
       res = await fetch(API, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          org_nm,
-          org_place,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ org_id, class_nm }),
       });
     }
 
     const result = await res.json();
 
-    if (!result.success) {
-      throw new Error(result.message);
-    }
+    if (!result.success) throw new Error(result.message);
 
     resetForm();
-
-    await loadOrgs();
-
-    alert("Saved");
+    await loadClass();
   } catch (err) {
     console.error(err);
     alert(err.message);
@@ -145,26 +151,26 @@ async function saveOrg() {
 }
 
 // =========================
-// EDIT
+// EDIT (UPDATE BUTTON FIX)
 // =========================
-function editOrg(id, name, place) {
-  console.log("EDIT", id, name, place);
+function editClass(id, name, org_id) {
+  editClassId = id;
 
-  editOrgId = id;
-
-  document.getElementById("org_nm").value = name || "";
-  document.getElementById("org_place").value = place || "";
-
+  const nameEl = document.getElementById("class_nm");
+  const orgEl = document.getElementById("org_id");
   const btn = document.getElementById("saveBtn");
 
-  btn.innerText = "Update Organization";
+  if (nameEl) nameEl.value = name || "";
+  if (orgEl) orgEl.value = org_id || "";
+
+  if (btn) btn.innerText = "Update Class";
 }
 
 // =========================
 // DELETE
 // =========================
-async function deleteOrg(id) {
-  if (!confirm("Delete Organization?")) return;
+async function deleteClass(id) {
+  if (!confirm("Delete?")) return;
 
   try {
     const res = await fetch(`${API}/${id}`, {
@@ -173,17 +179,11 @@ async function deleteOrg(id) {
 
     const result = await res.json();
 
-    if (!result.success) {
-      throw new Error(result.message);
-    }
+    if (!result.success) throw new Error(result.message);
 
-    if (editOrgId === id) {
-      resetForm();
-    }
+    if (editClassId === id) resetForm();
 
-    await loadOrgs();
-
-    alert("Deleted");
+    await loadClass();
   } catch (err) {
     console.error(err);
     alert(err.message);
@@ -194,23 +194,22 @@ async function deleteOrg(id) {
 // RESET
 // =========================
 function resetForm() {
-  editOrgId = null;
+  editClassId = null;
 
-  document.getElementById("org_nm").value = "";
-  document.getElementById("org_place").value = "";
-
+  const nameEl = document.getElementById("class_nm");
   const btn = document.getElementById("saveBtn");
 
-  btn.innerText = "Add Organization | إضافة مؤسسة";
+  if (nameEl) nameEl.value = "";
+
+  if (btn) {
+    btn.innerText = "Add Class | إضافة فصل";
+  }
 }
 
 // =========================
-// MODULE EXPORT TO WINDOW
+// WINDOW EXPORT
 // =========================
-window.saveOrg = saveOrg;
-window.editOrg = editOrg;
-window.deleteOrg = deleteOrg;
+window.saveClass = saveClass;
+window.editClass = editClass;
+window.deleteClass = deleteClass;
 window.resetForm = resetForm;
-
-// INIT
-loadOrgs();
