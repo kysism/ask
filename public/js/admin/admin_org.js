@@ -1,13 +1,11 @@
+let orgs = [];
 let editOrgId = null;
+let saving = false;
 
 const API = "/api/org";
 
-let orgs = [];
-
-let saving = false;
-
 // =========================
-// ESCAPE HTML
+// ESCAPE
 // =========================
 function escapeHtml(str = "") {
   return String(str)
@@ -25,25 +23,17 @@ async function loadOrgs() {
   try {
     const res = await fetch(API);
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.log("status:", res.status);
-      console.log("raw response:", text);
-      throw new Error("API Load Failed");
-    }
-
     const result = await res.json();
 
-    if (!Array.isArray(result.data)) {
-      throw new Error("Invalid data format");
+    if (!result.success || !Array.isArray(result.data)) {
+      throw new Error("Invalid API response");
     }
 
     orgs = result.data;
-
     render();
   } catch (err) {
     console.error(err);
-    alert(err.message || "Load Error");
+    alert(err.message);
   }
 }
 
@@ -51,72 +41,38 @@ async function loadOrgs() {
 // RENDER
 // =========================
 function render() {
-  let table = "";
-  let mobile = "";
+  let html = "";
 
   if (orgs.length === 0) {
-    table = `
-      <tr>
-        <td colspan="3" style="text-align:center;">No Data</td>
-      </tr>
-    `;
-
-    document.getElementById("orgBody").innerHTML = table;
-    document.getElementById("mobileOrgBody").innerHTML = `
-      <div class="mobile-item">No Data</div>
-    `;
-    return;
+    html = `<tr><td colspan="4">No Data</td></tr>`;
   }
 
-  orgs.forEach((row) => {
-    const id = row.org_id;
-    const name = escapeHtml(row.org_nm);
-    const place = escapeHtml(row.org_place || "-");
-
-    table += `
+  orgs.forEach((o) => {
+    html += `
       <tr>
-        <td>${id}</td>
-        <td>${name}</td>
-        <td>${place}</td>
+        <td>${o.org_id}</td>
+        <td>${escapeHtml(o.org_nm)}</td>
+        <td>${escapeHtml(o.org_place || "-")}</td>
         <td>
           <button class="btn-warning btn-sm"
-            onclick="editOrg(${id}, '${name}', '${place}')">
-            Edit | تعديل
+            onclick="editOrg(${o.org_id}, '${escapeHtml(o.org_nm)}', '${escapeHtml(o.org_place || "")}')">
+            Edit
           </button>
 
           <button class="btn-danger btn-sm"
-            onclick="deleteOrg(${id})">
-            Delete | حذف
+            onclick="deleteOrg(${o.org_id})">
+            Delete
           </button>
         </td>
       </tr>
     `;
-
-    mobile += `
-      <div class="mobile-item">
-        <h3>${name}</h3>
-        <p><b>ID:</b> ${id}</p>
-        <p><b>Location:</b> ${place}</p>
-
-        <button class="btn-warning btn-sm"
-          onclick="editOrg(${id}, '${name}', '${place}')">
-          Edit
-        </button>
-
-        <button class="btn-danger btn-sm"
-          onclick="deleteOrg(${id})">
-          Delete
-        </button>
-      </div>
-    `;
   });
 
-  document.getElementById("orgBody").innerHTML = table;
-  document.getElementById("mobileOrgBody").innerHTML = mobile;
+  document.getElementById("orgBody").innerHTML = html;
 }
 
 // =========================
-// SAVE (CREATE / UPDATE)
+// SAVE
 // =========================
 async function saveOrg() {
   if (saving) return;
@@ -124,55 +80,35 @@ async function saveOrg() {
   const org_nm = document.getElementById("org_nm").value.trim();
   const org_place = document.getElementById("org_place").value.trim();
 
-  if (!org_nm) {
-    return alert("Enter organization name");
-  }
+  if (!org_nm) return alert("Enter name");
 
   saving = true;
 
   try {
-    let response;
+    let res;
 
-    // UPDATE
     if (editOrgId) {
-      response = await fetch(`${API}/${editOrgId}`, {
+      res = await fetch(`${API}/${editOrgId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          org_nm,
-          org_place,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ org_nm, org_place }),
       });
-    }
-    // CREATE
-    else {
-      response = await fetch(API, {
+    } else {
+      res = await fetch(API, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          org_nm,
-          org_place,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ org_nm, org_place }),
       });
     }
 
-    const result = await response.json();
+    const result = await res.json();
 
-    if (!response.ok || !result.success) {
-      throw new Error(result.message || "Save failed");
-    }
-
-    alert("Saved successfully");
+    if (!result.success) throw new Error(result.message);
 
     resetForm();
     await loadOrgs();
   } catch (err) {
-    console.error(err);
-    alert(err.message || "Save Error");
+    alert(err.message);
   } finally {
     saving = false;
   }
@@ -185,36 +121,29 @@ function editOrg(id, name, place) {
   editOrgId = id;
 
   document.getElementById("org_nm").value = name;
-  document.getElementById("org_place").value = place;
+  document.getElementById("org_place").value = place || "";
 }
 
 // =========================
 // DELETE
 // =========================
 async function deleteOrg(id) {
-  if (!confirm("Delete this organization?")) return;
+  if (!confirm("Delete?")) return;
 
   try {
-    const response = await fetch(`${API}/${id}`, {
+    const res = await fetch(`${API}/${id}`, {
       method: "DELETE",
     });
 
-    const result = await response.json();
+    const result = await res.json();
 
-    if (!response.ok || !result.success) {
-      throw new Error(result.message || "Delete failed");
-    }
-
-    alert("Deleted successfully");
+    if (!result.success) throw new Error(result.message);
 
     await loadOrgs();
 
-    if (editOrgId === id) {
-      resetForm();
-    }
+    if (editOrgId === id) resetForm();
   } catch (err) {
-    console.error(err);
-    alert(err.message || "Delete Error");
+    alert(err.message);
   }
 }
 
@@ -223,15 +152,15 @@ async function deleteOrg(id) {
 // =========================
 function resetForm() {
   editOrgId = null;
-
   document.getElementById("org_nm").value = "";
   document.getElementById("org_place").value = "";
-
-  const btn = document.getElementById("saveBtn");
-  btn.innerText = "Add Organization | إضافة";
-  btn.classList.remove("btn-success");
-  btn.classList.add("btn-primary");
 }
 
-// INIT
+// =========================
+// IMPORTANT: MODULE FIX
+// =========================
+window.editOrg = editOrg;
+window.deleteOrg = deleteOrg;
+window.saveOrg = saveOrg;
+
 loadOrgs();
