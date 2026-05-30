@@ -1,195 +1,148 @@
-import { supabase } from "../../js/common/supabaseClient.js";
-
+let students = [];
 let editStudentId = null;
 
-/* =========================
-         LOAD CLASS
-      ========================= */
+const API = "/api/student";
+const CLASS_API = "/api/class";
+
+// =========================
+// LOAD CLASS
+// =========================
 async function loadClass() {
-  const { data } = await supabase
-    .from("tbl_class")
-    .select("*")
-    .order("class_nm");
+  const res = await fetch(CLASS_API);
+  const result = await res.json();
 
-  let html = `
-          <option value="">
-            Select Class | اختر الفصل
-          </option>
-        `;
+  let html = `<option value="">Select Class</option>`;
 
-  data.forEach((row) => {
-    html += `
-            <option value="${row.class_id}">
-              ${row.class_nm}
-            </option>
-          `;
+  (result.data || []).forEach((c) => {
+    html += `<option value="${c.class_id}">${c.class_nm}</option>`;
   });
 
   document.getElementById("class_id").innerHTML = html;
 }
 
-/* =========================
-         LOAD STUDENT
-      ========================= */
-window.loadStudent = async function () {
-  const class_id = document.getElementById("class_id").value;
+// =========================
+// LOAD STUDENT
+// =========================
+async function loadStudent() {
+  const classId = document.getElementById("class_id").value;
 
-  let query = supabase
-    .from("tbl_student")
-    .select(
-      `
-            student_id,
-            student_nm,
-            class_id,
-            tbl_class(class_nm)
-          `,
-    )
-    .order("student_id", { ascending: false });
+  let url = API;
+  if (classId) url += `?class_id=${classId}`;
 
-  if (class_id) {
-    query = query.eq("class_id", class_id);
-  }
+  const res = await fetch(url);
+  const result = await res.json();
 
-  const { data } = await query;
+  students = result.data || [];
+  render();
+}
 
-  let table = "";
-  let mobile = "";
+// =========================
+// RENDER
+// =========================
+function render() {
+  let html = "";
 
-  data.forEach((row) => {
-    table += `
-            <tr>
-              <td>${row.student_id}</td>
-              <td>${row.tbl_class?.class_nm ?? "-"}</td>
-              <td>${row.student_nm}</td>
-              <td>
+  students.forEach((s) => {
+    html += `
+      <tr>
+        <td>${s.student_id}</td>
+        <td>${s.tbl_class?.class_nm ?? "-"}</td>
+        <td>${s.student_nm}</td>
+        <td>
+          <button class="btn-warning btn-sm"
+            onclick="editStudent(${s.student_id}, '${s.student_nm}', ${s.class_id})">
+            Edit
+          </button>
 
-                <div class="action-buttons">
-
-                  <button
-                    class="btn-warning btn-sm"
-                    onclick="editStudent(${row.student_id}, '${row.student_nm}', '${row.class_id}')"
-                  >
-                    Edit | تعديل
-                  </button>
-
-                  <button
-                    class="btn-danger btn-sm"
-                    onclick="deleteStudent(${row.student_id})"
-                  >
-                    Delete | حذف
-                  </button>
-
-                </div>
-
-              </td>
-            </tr>
-          `;
-
-    mobile += `
-            <div class="mobile-item">
-
-              <h3>${row.student_nm}</h3>
-
-              <p><b>ID:</b> ${row.student_id}</p>
-              <p><b>Class:</b> ${row.tbl_class?.class_nm ?? "-"}</p>
-
-              <div class="action-buttons">
-
-                <button
-                  class="btn-warning btn-sm"
-                  onclick="editStudent(${row.student_id}, '${row.student_nm}', '${row.class_id}')"
-                >
-                  Edit | تعديل
-                </button>
-
-                <button
-                  class="btn-danger btn-sm"
-                  onclick="deleteStudent(${row.student_id})"
-                >
-                  Delete | حذف
-                </button>
-
-              </div>
-
-            </div>
-          `;
+          <button class="btn-danger btn-sm"
+            onclick="deleteStudent(${s.student_id})">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
   });
 
-  document.getElementById("studentBody").innerHTML = table;
-  document.getElementById("mobileStudentBody").innerHTML = mobile;
-};
+  document.getElementById("studentBody").innerHTML = html;
+}
 
-/* =========================
-         SAVE (INSERT / UPDATE)
-      ========================= */
-window.saveStudent = async function () {
+// =========================
+// SAVE
+// =========================
+async function saveStudent() {
   const class_id = document.getElementById("class_id").value;
   const student_nm = document.getElementById("student_nm").value.trim();
 
-  if (!class_id) return alert("Select class | اختار الفصل");
-  if (!student_nm) return alert("Enter name | اكتب الاسم");
+  if (!class_id || !student_nm) return alert("Fill all fields");
+
+  let res;
 
   if (editStudentId) {
-    await supabase
-      .from("tbl_student")
-      .update({ class_id, student_nm })
-      .eq("student_id", editStudentId);
-
-    alert("Updated | تم التعديل");
+    res = await fetch(`${API}/${editStudentId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ class_id, student_nm }),
+    });
   } else {
-    await supabase.from("tbl_student").insert([{ class_id, student_nm }]);
-
-    alert("Inserted | تمت الإضافة");
+    res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ class_id, student_nm }),
+    });
   }
+
+  const result = await res.json();
+
+  if (!result.success) return alert(result.message);
 
   resetForm();
   loadStudent();
-};
+}
 
-/* =========================
-         EDIT
-      ========================= */
-window.editStudent = function (id, name, class_id) {
+// =========================
+// EDIT
+// =========================
+function editStudent(id, name, class_id) {
   editStudentId = id;
 
   document.getElementById("student_nm").value = name;
   document.getElementById("class_id").value = class_id;
+}
 
-  const btn = document.getElementById("saveBtn");
-  btn.innerText = "Update | تعديل";
-  btn.classList.remove("btn-primary");
-  btn.classList.add("btn-success");
+// =========================
+// DELETE
+// =========================
+async function deleteStudent(id) {
+  if (!confirm("Delete?")) return;
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
+  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+  const result = await res.json();
 
-/* =========================
-         DELETE
-      ========================= */
-window.deleteStudent = async function (id) {
-  if (!confirm("Delete? | حذف؟")) return;
+  if (!result.success) return alert(result.message);
 
-  await supabase.from("tbl_student").delete().eq("student_id", id);
-
-  alert("Deleted | تم الحذف");
   loadStudent();
-};
+}
 
-/* =========================
-         RESET
-      ========================= */
-window.resetForm = function () {
+// =========================
+// RESET
+// =========================
+function resetForm() {
   editStudentId = null;
-
   document.getElementById("student_nm").value = "";
+}
 
-  const btn = document.getElementById("saveBtn");
-  btn.innerText = "Add Student | إضافة";
-  btn.classList.remove("btn-success");
-  btn.classList.add("btn-primary");
-};
-
+// =========================
+// EVENTS
+// =========================
 document.getElementById("class_id").addEventListener("change", loadStudent);
 
+// =========================
+// INIT
+// =========================
 loadClass();
 loadStudent();
+
+window.saveStudent = saveStudent;
+window.editStudent = editStudent;
+window.deleteStudent = deleteStudent;
+window.resetForm = resetForm;
