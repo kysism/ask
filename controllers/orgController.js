@@ -1,14 +1,15 @@
 const supabase = require("../services/supabaseService");
 
-// ------------------
-// LOAD Orgnization
-// ------------------
+// =========================
+// GET
+// =========================
 exports.getOrg = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("tbl_org")
       .select("*")
       .order("org_id", { ascending: false });
+
     if (error) throw error;
 
     return res.json({
@@ -25,9 +26,9 @@ exports.getOrg = async (req, res) => {
   }
 };
 
-// ===============================
-// CREATE Orgnization
-// ===============================
+// =========================
+// CREATE
+// =========================
 exports.createOrg = async (req, res) => {
   try {
     const { org_nm, org_place } = req.body;
@@ -43,8 +44,8 @@ exports.createOrg = async (req, res) => {
       .from("tbl_org")
       .insert([
         {
-          org_nm: org_nm,
-          org_place: org_place,
+          org_nm,
+          org_place,
         },
       ])
       .select();
@@ -65,20 +66,21 @@ exports.createOrg = async (req, res) => {
   }
 };
 
-// ===============================
-// UPDATE Orgnization
-// ===============================
+// =========================
+// UPDATE
+// =========================
 exports.updateOrg = async (req, res) => {
   try {
-    const { code } = req.params;
-    const { name } = req.body;
+    const { id } = req.params;
+    const { org_nm, org_place } = req.body;
 
     const { data, error } = await supabase
       .from("tbl_org")
       .update({
-        name,
+        org_nm,
+        org_place,
       })
-      .eq("code", code)
+      .eq("org_id", id)
       .select();
 
     if (error) throw error;
@@ -97,14 +99,14 @@ exports.updateOrg = async (req, res) => {
   }
 };
 
-// ===============================
-// DELETE Orgnization
-// ===============================
+// =========================
+// DELETE
+// =========================
 exports.deleteOrg = async (req, res) => {
   try {
-    const { code } = req.params;
+    const { id } = req.params;
 
-    const { error } = await supabase.from("tbl_org").delete().eq("code", code);
+    const { error } = await supabase.from("tbl_org").delete().eq("org_id", id);
 
     if (error) throw error;
 

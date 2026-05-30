@@ -5,18 +5,6 @@ let saving = false;
 const API = "/api/org";
 
 // =========================
-// ESCAPE
-// =========================
-function escapeHtml(str = "") {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-// =========================
 // LOAD
 // =========================
 async function loadOrgs() {
@@ -25,11 +13,12 @@ async function loadOrgs() {
 
     const result = await res.json();
 
-    if (!result.success || !Array.isArray(result.data)) {
-      throw new Error("Invalid API response");
+    if (!result.success) {
+      throw new Error(result.message || "Load Failed");
     }
 
-    orgs = result.data;
+    orgs = result.data || [];
+
     render();
   } catch (err) {
     console.error(err);
@@ -44,25 +33,43 @@ function render() {
   let html = "";
 
   if (orgs.length === 0) {
-    html = `<tr><td colspan="4">No Data</td></tr>`;
+    html = `
+      <tr>
+        <td colspan="4" style="text-align:center">
+          No Data
+        </td>
+      </tr>
+    `;
   }
 
   orgs.forEach((o) => {
+    const safeName = JSON.stringify(o.org_nm || "");
+    const safePlace = JSON.stringify(o.org_place || "");
+
     html += `
       <tr>
         <td>${o.org_id}</td>
-        <td>${escapeHtml(o.org_nm)}</td>
-        <td>${escapeHtml(o.org_place || "-")}</td>
+
+        <td>${o.org_nm}</td>
+
+        <td>${o.org_place || "-"}</td>
+
         <td>
-          <button class="btn-warning btn-sm"
-            onclick="editOrg(${o.org_id}, '${escapeHtml(o.org_nm)}', '${escapeHtml(o.org_place || "")}')">
+
+          <button
+            class="btn-warning btn-sm"
+            onclick='editOrg(${o.org_id}, ${safeName}, ${safePlace})'
+          >
             Edit
           </button>
 
-          <button class="btn-danger btn-sm"
-            onclick="deleteOrg(${o.org_id})">
+          <button
+            class="btn-danger btn-sm"
+            onclick="deleteOrg(${o.org_id})"
+          >
             Delete
           </button>
+
         </td>
       </tr>
     `;
@@ -80,34 +87,57 @@ async function saveOrg() {
   const org_nm = document.getElementById("org_nm").value.trim();
   const org_place = document.getElementById("org_place").value.trim();
 
-  if (!org_nm) return alert("Enter name");
+  if (!org_nm) {
+    alert("Organization Name required");
+    return;
+  }
 
   saving = true;
 
   try {
     let res;
 
+    // UPDATE
     if (editOrgId) {
       res = await fetch(`${API}/${editOrgId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ org_nm, org_place }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          org_nm,
+          org_place,
+        }),
       });
-    } else {
+    }
+
+    // INSERT
+    else {
       res = await fetch(API, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ org_nm, org_place }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          org_nm,
+          org_place,
+        }),
       });
     }
 
     const result = await res.json();
 
-    if (!result.success) throw new Error(result.message);
+    if (!result.success) {
+      throw new Error(result.message);
+    }
 
     resetForm();
+
     await loadOrgs();
+
+    alert("Saved");
   } catch (err) {
+    console.error(err);
     alert(err.message);
   } finally {
     saving = false;
@@ -118,17 +148,23 @@ async function saveOrg() {
 // EDIT
 // =========================
 function editOrg(id, name, place) {
+  console.log("EDIT", id, name, place);
+
   editOrgId = id;
 
-  document.getElementById("org_nm").value = name;
+  document.getElementById("org_nm").value = name || "";
   document.getElementById("org_place").value = place || "";
+
+  const btn = document.getElementById("saveBtn");
+
+  btn.innerText = "Update Organization";
 }
 
 // =========================
 // DELETE
 // =========================
 async function deleteOrg(id) {
-  if (!confirm("Delete?")) return;
+  if (!confirm("Delete Organization?")) return;
 
   try {
     const res = await fetch(`${API}/${id}`, {
@@ -137,12 +173,19 @@ async function deleteOrg(id) {
 
     const result = await res.json();
 
-    if (!result.success) throw new Error(result.message);
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    if (editOrgId === id) {
+      resetForm();
+    }
 
     await loadOrgs();
 
-    if (editOrgId === id) resetForm();
+    alert("Deleted");
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
@@ -152,15 +195,22 @@ async function deleteOrg(id) {
 // =========================
 function resetForm() {
   editOrgId = null;
+
   document.getElementById("org_nm").value = "";
   document.getElementById("org_place").value = "";
+
+  const btn = document.getElementById("saveBtn");
+
+  btn.innerText = "Add Organization | إضافة مؤسسة";
 }
 
 // =========================
-// IMPORTANT: MODULE FIX
+// MODULE EXPORT TO WINDOW
 // =========================
+window.saveOrg = saveOrg;
 window.editOrg = editOrg;
 window.deleteOrg = deleteOrg;
-window.saveOrg = saveOrg;
+window.resetForm = resetForm;
 
+// INIT
 loadOrgs();
