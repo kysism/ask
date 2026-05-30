@@ -29,11 +29,15 @@ async function loadStudent() {
   let url = API;
   if (classId) url += `?class_id=${classId}`;
 
-  const res = await fetch(url);
-  const result = await res.json();
+  try {
+    const res = await fetch(url);
+    const result = await res.json();
 
-  students = result.data || [];
-  render();
+    students = result.data || [];
+    render();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // =========================
@@ -41,6 +45,16 @@ async function loadStudent() {
 // =========================
 function render() {
   let html = "";
+
+  if (students.length === 0) {
+    html = `
+      <tr>
+        <td colspan="4" style="text-align:center;">
+          No Data
+        </td>
+      </tr>
+    `;
+  }
 
   students.forEach((s) => {
     html += `
@@ -73,30 +87,47 @@ async function saveStudent() {
   const class_id = document.getElementById("class_id").value;
   const student_nm = document.getElementById("student_nm").value.trim();
 
-  if (!class_id || !student_nm) return alert("Fill all fields");
+  if (!class_id || !student_nm) {
+    alert("Fill all fields");
+    return;
+  }
 
   let res;
 
-  if (editStudentId) {
-    res = await fetch(`${API}/${editStudentId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ class_id, student_nm }),
-    });
-  } else {
-    res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ class_id, student_nm }),
-    });
+  try {
+    // UPDATE
+    if (editStudentId) {
+      res = await fetch(`${API}/${editStudentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ class_id, student_nm }),
+      });
+    }
+
+    // INSERT
+    else {
+      res = await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ class_id, student_nm }),
+      });
+    }
+
+    const result = await res.json();
+
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    resetForm(); // 🔥 핵심
+    await loadStudent(); // 🔥 리스트 갱신
+  } catch (err) {
+    alert(err.message);
   }
-
-  const result = await res.json();
-
-  if (!result.success) return alert(result.message);
-
-  resetForm();
-  loadStudent();
 }
 
 // =========================
@@ -107,6 +138,11 @@ function editStudent(id, name, class_id) {
 
   document.getElementById("student_nm").value = name;
   document.getElementById("class_id").value = class_id;
+
+  const btn = document.getElementById("saveBtn");
+  btn.innerText = "Update Student | تعديل الطالب";
+  btn.classList.remove("btn-primary");
+  btn.classList.add("btn-success");
 }
 
 // =========================
@@ -115,20 +151,38 @@ function editStudent(id, name, class_id) {
 async function deleteStudent(id) {
   if (!confirm("Delete?")) return;
 
-  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
-  const result = await res.json();
+  try {
+    const res = await fetch(`${API}/${id}`, {
+      method: "DELETE",
+    });
 
-  if (!result.success) return alert(result.message);
+    const result = await res.json();
 
-  loadStudent();
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    // 🔥 삭제 후 UI 완전 초기화
+    resetForm();
+    await loadStudent();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 // =========================
-// RESET
+// RESET (FULL RESET)
 // =========================
 function resetForm() {
   editStudentId = null;
+
   document.getElementById("student_nm").value = "";
+  document.getElementById("class_id").value = "";
+
+  const btn = document.getElementById("saveBtn");
+  btn.innerText = "Add Student | إضافة طالب";
+  btn.classList.remove("btn-success");
+  btn.classList.add("btn-primary");
 }
 
 // =========================
@@ -142,6 +196,9 @@ document.getElementById("class_id").addEventListener("change", loadStudent);
 loadClass();
 loadStudent();
 
+// =========================
+// WINDOW EXPORT
+// =========================
 window.saveStudent = saveStudent;
 window.editStudent = editStudent;
 window.deleteStudent = deleteStudent;
