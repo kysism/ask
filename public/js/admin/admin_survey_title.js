@@ -1,49 +1,79 @@
-import { supabase } from "../../js/common/supabaseClient.js";
+let editSurveyId = null;
 
-let editId = null;
 const API = "/api/survey-title";
 
-// LOAD
+/* LOAD */
 async function loadSurvey() {
-  const res = await fetch(API);
-  const result = await res.json();
+  try {
+    const res = await fetch(API);
+    const result = await res.json();
 
-  const data = result.data || [];
+    const data = result.data || [];
 
-  let html = "";
+    let table = "";
+    let mobile = "";
 
-  data.forEach((row) => {
-    const status = row.use_yn
-      ? `<span class="status-on">ON</span>`
-      : `<span class="status-off">OFF</span>`;
+    data.forEach((row) => {
+      const status = row.use_yn
+        ? `<span class="status-on">Active</span>`
+        : `<span class="status-off">Inactive</span>`;
 
-    html += `
-      <tr>
-        <td>${row.survey_id}</td>
-        <td>${row.survey_title}</td>
-        <td>${status}</td>
-        <td>
-          <button onclick="editSurvey(${row.survey_id}, '${row.survey_title}', ${row.use_yn})">Edit</button>
-          <button onclick="deleteSurvey(${row.survey_id})">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
+      table += `
+        <tr>
+          <td>${row.survey_id}</td>
+          <td>${row.survey_title}</td>
+          <td>${status}</td>
+          <td>
+            <button class="btn-warning btn-sm"
+              onclick="editSurvey(${row.survey_id}, '${row.survey_title}', ${row.use_yn})">
+              Edit
+            </button>
 
-  document.getElementById("surveyBody").innerHTML = html;
+            <button class="btn-danger btn-sm"
+              onclick="deleteSurvey(${row.survey_id})">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `;
+
+      mobile += `
+        <div class="mobile-item">
+          <h3>${row.survey_title}</h3>
+          <p>ID: ${row.survey_id}</p>
+          <p>${status}</p>
+
+          <button class="btn-warning btn-sm"
+            onclick="editSurvey(${row.survey_id}, '${row.survey_title}', ${row.use_yn})">
+            Edit
+          </button>
+
+          <button class="btn-danger btn-sm"
+            onclick="deleteSurvey(${row.survey_id})">
+            Delete
+          </button>
+        </div>
+      `;
+    });
+
+    document.getElementById("surveyBody").innerHTML = table;
+    document.getElementById("mobileSurveyBody").innerHTML = mobile;
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-// SAVE
-window.saveSurvey = async function () {
+/* SAVE */
+async function saveSurvey() {
   const survey_title = document.getElementById("survey_title").value.trim();
   const use_yn = document.getElementById("use_yn").checked;
 
-  if (!survey_title) return alert("required");
+  if (!survey_title) return alert("Enter title");
 
   let res;
 
-  if (editId) {
-    res = await fetch(`${API}/${editId}`, {
+  if (editSurveyId) {
+    res = await fetch(`${API}/${editSurveyId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ survey_title, use_yn }),
@@ -62,34 +92,46 @@ window.saveSurvey = async function () {
 
   resetForm();
   loadSurvey();
-};
+}
 
-// EDIT
-window.editSurvey = function (id, title, use_yn) {
-  editId = id;
+/* EDIT */
+function editSurvey(id, title, use_yn) {
+  editSurveyId = id;
 
   document.getElementById("survey_title").value = title;
   document.getElementById("use_yn").checked = use_yn;
 
   const btn = document.getElementById("saveBtn");
   btn.innerText = "Update Survey";
-};
+  btn.classList.add("btn-success");
 
-// DELETE
-window.deleteSurvey = async function (id) {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* DELETE */
+async function deleteSurvey(id) {
   await fetch(`${API}/${id}`, { method: "DELETE" });
-  resetForm();
-  loadSurvey();
-};
 
-// RESET
-window.resetForm = function () {
-  editId = null;
+  if (editSurveyId === id) resetForm();
+
+  loadSurvey();
+}
+
+/* RESET */
+function resetForm() {
+  editSurveyId = null;
 
   document.getElementById("survey_title").value = "";
   document.getElementById("use_yn").checked = true;
 
-  document.getElementById("saveBtn").innerText = "Add Survey";
-};
+  const btn = document.getElementById("saveBtn");
+  btn.innerText = "Add Survey";
+  btn.classList.remove("btn-success");
+}
+
+window.saveSurvey = saveSurvey;
+window.editSurvey = editSurvey;
+window.deleteSurvey = deleteSurvey;
+window.resetForm = resetForm;
 
 loadSurvey();

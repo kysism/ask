@@ -13,7 +13,6 @@ async function load() {
 
   data.forEach((r) => {
     const item = r.tbl_survey_item;
-
     if (!item) return;
 
     if (item.survey_item_type === "S") {
@@ -26,17 +25,17 @@ async function load() {
   });
 
   document.getElementById("scoreTable").innerHTML = Object.entries(scoreMap)
-    .map(([k, v]) => `<div>${k} : ${v}</div>`)
+    .map(([k, v]) => `<div>${k}: ${v}</div>`)
     .join("");
 
   document.getElementById("textBox").innerHTML = Object.entries(textMap)
     .map(
       ([k, arr]) => `
-      <div>
-        <h4>${k}</h4>
-        ${arr.map((v) => `<div>${v}</div>`).join("")}
-      </div>
-    `,
+          <div>
+            <h4>${k}</h4>
+            ${arr.map((v) => `<div>${v}</div>`).join("")}
+          </div>
+        `,
     )
     .join("");
 }

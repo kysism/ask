@@ -1,24 +1,26 @@
-import { supabase } from "../../js/common/supabaseClient.js";
+let editItemId = null;
 
-let editId = null;
 const API = "/api/survey-item";
+const SURVEY_API = "/api/survey-title";
 
-// LOAD SURVEY LIST
+/* LOAD SURVEY LIST */
 async function loadSurvey() {
-  const res = await fetch("/api/survey-title");
+  const res = await fetch(SURVEY_API);
   const result = await res.json();
+
+  const data = result.data || [];
 
   let html = `<option value="">Select Survey</option>`;
 
-  result.data.forEach((r) => {
-    html += `<option value="${r.survey_id}">${r.survey_title}</option>`;
+  data.forEach((s) => {
+    html += `<option value="${s.survey_id}">${s.survey_title}</option>`;
   });
 
   document.getElementById("survey_id").innerHTML = html;
 }
 
-// LOAD ITEMS
-window.loadItem = async function () {
+/* LOAD ITEMS */
+async function loadItem() {
   const survey_id = document.getElementById("survey_id").value;
 
   let url = API;
@@ -35,80 +37,127 @@ window.loadItem = async function () {
     html += `
       <tr>
         <td>${r.survey_item_id}</td>
-        <td>${r.tbl_survey?.survey_title}</td>
+        <td>${r.survey_title}</td>
         <td>${r.survey_item}</td>
         <td>${r.survey_item_type}</td>
         <td>${r.survey_item_mandatory}</td>
         <td>
-          <button onclick="editItem(${r.survey_item_id}, '${r.survey_item}', ${r.survey_id}, '${r.survey_item_type}', ${r.survey_item_mandatory})">Edit</button>
-          <button onclick="deleteItem(${r.survey_item_id})">Delete</button>
+          <button class="btn-warning edit-btn" data-id="${r.survey_item_id}">Edit</button>
+          <button class="btn-danger delete-btn" data-id="${r.survey_item_id}">Delete</button>
         </td>
       </tr>
     `;
   });
 
   document.getElementById("itemBody").innerHTML = html;
-};
+}
 
-// SAVE
-window.saveItem = async function () {
-  const body = {
-    survey_id: document.getElementById("survey_id").value,
-    survey_item: document.getElementById("survey_item").value,
-    survey_item_type: document.getElementById("survey_item_type").value,
-    survey_item_mandatory:
-      document.getElementById("survey_item_mandatory").value === "true",
-  };
+/* EVENT */
+document.addEventListener("click", async (e) => {
+  const id = e.target.dataset.id;
+
+  if (e.target.classList.contains("edit-btn")) {
+    const res = await fetch(`${API}/${id}`);
+    const result = await res.json();
+
+    const d = result.data;
+
+    editItem(
+      d.survey_item_id,
+      d.survey_item,
+      d.survey_id,
+      d.survey_item_type,
+      d.survey_item_mandatory,
+    );
+  }
+
+  if (e.target.classList.contains("delete-btn")) {
+    await fetch(`${API}/${id}`, { method: "DELETE" });
+
+    if (editItemId === id) resetForm();
+
+    loadItem();
+  }
+});
+
+/* SAVE */
+async function saveItem() {
+  const survey_id = document.getElementById("survey_id").value;
+  const survey_item = document.getElementById("survey_item").value.trim();
+  const survey_item_type = document.getElementById("survey_item_type").value;
+  const survey_item_mandatory =
+    document.getElementById("survey_item_mandatory").value === "true";
+
+  if (!survey_id || !survey_item) return alert("Fill fields");
 
   let res;
 
-  if (editId) {
-    res = await fetch(`${API}/${editId}`, {
+  if (editItemId) {
+    res = await fetch(`${API}/${editItemId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        survey_id,
+        survey_item,
+        survey_item_type,
+        survey_item_mandatory,
+      }),
     });
   } else {
     res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        survey_id,
+        survey_item,
+        survey_item_type,
+        survey_item_mandatory,
+      }),
     });
   }
 
-  editId = null;
+  const result = await res.json();
+
+  if (!result.success) return alert(result.message);
+
   resetForm();
   loadItem();
-};
+}
 
-// EDIT
-window.editItem = function (id, item, survey_id, type, mandatory) {
-  editId = id;
+/* EDIT */
+function editItem(id, item, survey_id, type, mandatory) {
+  editItemId = id;
 
   document.getElementById("survey_item").value = item;
   document.getElementById("survey_id").value = survey_id;
   document.getElementById("survey_item_type").value = type;
   document.getElementById("survey_item_mandatory").value = String(mandatory);
 
-  document.getElementById("saveBtn").innerText = "Update Item";
-};
+  const btn = document.getElementById("saveBtn");
+  btn.innerText = "Update Item";
+  btn.classList.add("btn-success");
 
-// DELETE
-window.deleteItem = async function (id) {
-  await fetch(`${API}/${id}`, { method: "DELETE" });
-  loadItem();
-};
+  window.scrollTo({ top: 0 });
+}
 
-// RESET
-window.resetForm = function () {
-  editId = null;
+/* RESET */
+function resetForm() {
+  editItemId = null;
 
   document.getElementById("survey_item").value = "";
   document.getElementById("survey_item_type").value = "S";
   document.getElementById("survey_item_mandatory").value = "true";
 
-  document.getElementById("saveBtn").innerText = "Add Item";
-};
+  const btn = document.getElementById("saveBtn");
+  btn.innerText = "Add Item";
+  btn.classList.remove("btn-success");
+}
+
+document.getElementById("survey_id").addEventListener("change", loadItem);
 
 loadSurvey();
 loadItem();
+
+window.saveItem = saveItem;
+window.editItem = editItem;
+window.resetForm = resetForm;
