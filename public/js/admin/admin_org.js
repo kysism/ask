@@ -34,7 +34,7 @@ async function loadOrgs() {
 
     const result = JSON.parse(text);
 
-    const result = await res.json();
+    result = await res.json();
 
     orgs = result.data || [];
 
