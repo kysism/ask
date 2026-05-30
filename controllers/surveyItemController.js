@@ -1,18 +1,12 @@
 const supabase = require("../services/supabaseService");
 
-// GET
+/* GET ALL */
 exports.getAll = async (req, res) => {
   try {
-    const { survey_id } = req.query;
-
-    let query = supabase
-      .from("tbl_survey_item")
-      .select(`*, tbl_survey(survey_title)`)
-      .order("survey_item_id", { ascending: false });
-
-    if (survey_id) query = query.eq("survey_id", survey_id);
-
-    const { data, error } = await query;
+    const { data, error } = await supabase
+      .from("tbl_survey")
+      .select("*")
+      .order("survey_id", { ascending: false });
 
     if (error) throw error;
 
@@ -22,22 +16,14 @@ exports.getAll = async (req, res) => {
   }
 };
 
-// CREATE
+/* CREATE */
 exports.create = async (req, res) => {
   try {
-    const { survey_id, survey_item, survey_item_type, survey_item_mandatory } =
-      req.body;
+    const { survey_title, use_yn } = req.body;
 
     const { data, error } = await supabase
-      .from("tbl_survey_item")
-      .insert([
-        {
-          survey_id,
-          survey_item,
-          survey_item_type,
-          survey_item_mandatory,
-        },
-      ])
+      .from("tbl_survey")
+      .insert([{ survey_title, use_yn }])
       .select();
 
     if (error) throw error;
@@ -48,15 +34,15 @@ exports.create = async (req, res) => {
   }
 };
 
-// UPDATE
+/* UPDATE */
 exports.update = async (req, res) => {
   try {
     const { id } = req.params;
 
     const { data, error } = await supabase
-      .from("tbl_survey_item")
+      .from("tbl_survey")
       .update(req.body)
-      .eq("survey_item_id", id)
+      .eq("survey_id", id)
       .select();
 
     if (error) throw error;
@@ -67,15 +53,15 @@ exports.update = async (req, res) => {
   }
 };
 
-// DELETE
+/* DELETE */
 exports.remove = async (req, res) => {
   try {
     const { id } = req.params;
 
     const { error } = await supabase
-      .from("tbl_survey_item")
+      .from("tbl_survey")
       .delete()
-      .eq("survey_item_id", id);
+      .eq("survey_id", id);
 
     if (error) throw error;
 
