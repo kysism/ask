@@ -1,9 +1,7 @@
 const supabase = require("../services/supabaseService");
 
-// ===============================
-// GET
-// ===============================
-exports.getSurvey = async (req, res) => {
+// GET ALL
+exports.getAll = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("tbl_survey")
@@ -13,18 +11,13 @@ exports.getSurvey = async (req, res) => {
     if (error) throw error;
 
     res.json({ success: true, data });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 };
 
-// ===============================
 // CREATE
-// ===============================
-exports.createSurvey = async (req, res) => {
+exports.create = async (req, res) => {
   try {
     const { survey_title, use_yn } = req.body;
 
@@ -36,18 +29,13 @@ exports.createSurvey = async (req, res) => {
     if (error) throw error;
 
     res.json({ success: true, data });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 };
 
-// ===============================
 // UPDATE
-// ===============================
-exports.updateSurvey = async (req, res) => {
+exports.update = async (req, res) => {
   try {
     const { id } = req.params;
     const { survey_title, use_yn } = req.body;
@@ -61,18 +49,13 @@ exports.updateSurvey = async (req, res) => {
     if (error) throw error;
 
     res.json({ success: true, data });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 };
 
-// ===============================
 // DELETE
-// ===============================
-exports.deleteSurvey = async (req, res) => {
+exports.remove = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -84,10 +67,7 @@ exports.deleteSurvey = async (req, res) => {
     if (error) throw error;
 
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
   }
 };

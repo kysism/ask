@@ -1,11 +1,9 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
+const controller = require("../controllers/surveyTitleController");
 
-const surveyController = require("../controllers/surveyTitleController");
-
-router.get("/", surveyController.getSurvey);
-router.post("/", surveyController.createSurvey);
-router.put("/:id", surveyController.updateSurvey);
-router.delete("/:id", surveyController.deleteSurvey);
+router.get("/", controller.getAll);
+router.post("/", controller.create);
+router.put("/:id", controller.update);
+router.delete("/:id", controller.remove);
 
 module.exports = router;

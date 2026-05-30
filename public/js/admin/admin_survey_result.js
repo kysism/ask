@@ -1,24 +1,20 @@
-import { supabase } from "../../js/common/supabaseClient.js";
+const API = "/api/survey-result";
 
 const survey_id = new URLSearchParams(location.search).get("survey_id");
 
 async function load() {
-  const { data } = await supabase
-    .from("tbl_result")
-    .select(
-      `
-            *,
-            tbl_survey_item(survey_item, survey_item_type)
-          `,
-    )
-    .eq("survey_id", survey_id);
+  const res = await fetch(`${API}?survey_id=${survey_id}`);
+  const result = await res.json();
+
+  const data = result.data || [];
 
   let scoreMap = {};
   let textMap = {};
 
-  /* DATA GROUPING */
   data.forEach((r) => {
     const item = r.tbl_survey_item;
+
+    if (!item) return;
 
     if (item.survey_item_type === "S") {
       scoreMap[item.survey_item] =
@@ -29,84 +25,20 @@ async function load() {
     }
   });
 
-  /* CHART */
-  new Chart(document.getElementById("chart"), {
-    type: "bar",
-    data: {
-      labels: Object.keys(scoreMap),
-      datasets: [
-        {
-          label: "Score",
-          data: Object.values(scoreMap),
-        },
-      ],
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1,
-          },
-        },
-      },
-    },
-  });
+  document.getElementById("scoreTable").innerHTML = Object.entries(scoreMap)
+    .map(([k, v]) => `<div>${k} : ${v}</div>`)
+    .join("");
 
-  /* TABLE */
-  let tableHtml = `
-          <table class="result-table">
-            <thead>
-              <tr>
-                <th>Question</th>
-                <th>Total Score</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-
-  Object.keys(scoreMap).forEach((k) => {
-    tableHtml += `
-            <tr>
-              <td>${k}</td>
-              <td>${scoreMap[k]}</td>
-            </tr>
-          `;
-  });
-
-  tableHtml += `
-            </tbody>
-          </table>
-        `;
-
-  document.getElementById("scoreTable").innerHTML = tableHtml;
-
-  /* TEXT ANSWERS */
-  let html = "";
-
-  Object.keys(textMap).forEach((k) => {
-    html += `
-            <div class="text-group">
-              <h4>${k}</h4>
-              <div class="answer-list">
-          `;
-
-    textMap[k].forEach((v, idx) => {
-      html += `
-              <div class="answer-item">
-                <div class="answer-number">${idx + 1}</div>
-                <div class="answer-text">${v}</div>
-              </div>
-            `;
-    });
-
-    html += `
-              </div>
-            </div>
-          `;
-  });
-
-  document.getElementById("textBox").innerHTML = html;
+  document.getElementById("textBox").innerHTML = Object.entries(textMap)
+    .map(
+      ([k, arr]) => `
+      <div>
+        <h4>${k}</h4>
+        ${arr.map((v) => `<div>${v}</div>`).join("")}
+      </div>
+    `,
+    )
+    .join("");
 }
 
 load();
