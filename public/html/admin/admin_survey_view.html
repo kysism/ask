@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Survey View Admin</title>
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/admin_style.css" />
+
+    <style>
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 16px;
+      }
+
+      .item {
+        padding: 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        background: #fff;
+        margin-bottom: 8px;
+        border: 1px solid #eee;
+        transition: 0.2s;
+      }
+
+      .item:hover {
+        background: #f3f4f6;
+        transform: translateY(-1px);
+      }
+
+      .item.active {
+        background: #e0e7ff;
+        border-left: 4px solid #2563eb;
+        font-weight: bold;
+      }
+
+      .q-item {
+        padding: 10px;
+        margin: 6px 0;
+        border-radius: 10px;
+        background: #f9fafb;
+        border-left: 3px solid #ddd;
+      }
+
+      .link-box {
+        margin-top: 10px;
+        background: #eff6ff;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        word-break: break-all;
+      }
+
+      .result-link {
+        margin-top: 10px;
+        background: #ecfdf5;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        word-break: break-all;
+        border: 1px solid #10b981;
+      }
+
+      .meta-select {
+        margin-bottom: 12px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .meta-select select {
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        background: #fff;
+      }
+
+      @media (max-width: 768px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>Survey Admin</h2>
+
+      <div class="layout">
+        <!-- LEFT -->
+        <div class="card">
+          <h3>Survey List</h3>
+          <div id="surveyList"></div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="card">
+          <h3 id="title">Select Survey</h3>
+
+          <!--  META SELECT (기관 / 반 / 학생) -->
+          <div class="meta-select">
+            <select id="orgSelect">
+              <option value="">Select Organization</option>
+            </select>
+
+            <select id="classSelect">
+              <option value="">Select Class</option>
+            </select>
+
+            <select id="studentSelect">
+              <option value="">Select Student</option>
+            </select>
+          </div>
+
+          <div id="questionList"></div>
+
+          <div class="link-box" id="linkBox"></div>
+
+          <div class="result-link" id="resultBox"></div>
+
+          <button class="btn-primary" style="width: 100%" onclick="copyLink()">
+            Copy Survey Link
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/comm/common.js"></script>
+    <script type="module" src="/js/admin/admin_survey_view.js"></script>
+  </body>
+</html>

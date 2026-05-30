@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Survey Item Management | إدارة أسئلة الاستبيان</title>
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/admin_style.css" />
+
+    <style>
+      .type-badge {
+        background: #e0e7ff;
+        color: #3730a3;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .required-badge {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .optional-badge {
+        background: #f3f4f6;
+        color: #374151;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .top-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 10px;
+      }
+
+      @media (max-width: 768px) {
+        .top-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .top-actions a {
+          width: 100%;
+          text-align: center;
+        }
+      }
+
+      .action-buttons button {
+        margin-right: 6px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="top-actions">
+          <h1 class="page-title">
+            Survey Item Management | إدارة أسئلة الاستبيان
+          </h1>
+
+          <a
+            href="/html/indx.html"
+            style="
+              padding: 10px 14px;
+              background: #111827;
+              color: white;
+              border-radius: 10px;
+              text-decoration: none;
+              font-size: 13px;
+              white-space: nowrap;
+            "
+          >
+            Home | الرئيسية
+          </a>
+        </div>
+
+        <div class="form-grid">
+          <select id="survey_id"></select>
+
+          <input
+            id="survey_item"
+            type="text"
+            placeholder="Survey Item | سؤال الاستبيان"
+          />
+
+          <select id="survey_item_type">
+            <option value="S">Select (Score) | اختيار</option>
+            <option value="I">Input (Text) | إدخال نص</option>
+          </select>
+
+          <select id="survey_item_mandatory">
+            <option value="true">Required | إجباري</option>
+            <option value="false">Optional | اختياري</option>
+          </select>
+
+          <button id="saveBtn" class="btn-primary" onclick="saveItem()">
+            Add Item | إضافة سؤال
+          </button>
+
+          <button class="btn-gray" onclick="resetForm()">
+            Reset | إعادة ضبط
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Survey</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody id="itemBody"></tbody>
+          </table>
+        </div>
+
+        <div id="mobileItemBody" class="mobile-card"></div>
+      </div>
+    </div>
+
+    <script src="/js/comm/common.js"></script>
+    <script type="module" src="/js/admin/admin_survey_item.js"></script>
+  </body>
+</html>

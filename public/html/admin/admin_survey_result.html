@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Survey Result Admin</title>
+
+    <link rel="stylesheet" href="/css/admin_style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      /* TABLE */
+      .result-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 14px;
+      }
+
+      .result-table th {
+        background: #f3f4f6;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 2px solid #e5e7eb;
+        font-weight: 600;
+      }
+
+      .result-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .result-table tr:hover {
+        background: #f9fafb;
+      }
+
+      /* OPEN ANSWER */
+      #textBox {
+        margin-top: 10px;
+      }
+
+      .text-group {
+        margin-bottom: 30px;
+      }
+
+      .text-group h4 {
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid #e5e7eb;
+        font-size: 16px;
+      }
+
+      .answer-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .answer-item {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+      }
+
+      .answer-number {
+        width: 26px;
+        height: 26px;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .answer-text {
+        flex: 1;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>Survey Result</h2>
+
+      <!-- CHART -->
+      <div class="card">
+        <canvas id="chart"></canvas>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card">
+        <h3>Score Summary Table</h3>
+        <div id="scoreTable"></div>
+      </div>
+
+      <!-- OPEN ANSWERS -->
+      <div class="card">
+        <h3>Open Answers (Text)</h3>
+        <div id="textBox"></div>
+      </div>
+    </div>
+
+    <script src="/js/comm/common.js"></script>
+    <script type="module" src="/js/admin/admin_survey_result.js"></script>
+  </body>
+</html>
