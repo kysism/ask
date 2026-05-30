@@ -1,9 +1,9 @@
-let editItemId = null;
-
 const API = "/api/survey-item";
 const SURVEY_API = "/api/survey-title";
 
-/* LOAD SURVEY LIST */
+let editItemId = null;
+
+/* LOAD SURVEY */
 async function loadSurvey() {
   const res = await fetch(SURVEY_API);
   const result = await res.json();
@@ -34,16 +34,33 @@ async function loadItem() {
   let html = "";
 
   data.forEach((r) => {
+    const typeLabel = r.survey_item_type === "S" ? "Select" : "Input";
+
+    const requiredLabel = r.survey_item_mandatory
+      ? `<span class="required-badge">Required</span>`
+      : `<span class="optional-badge">Optional</span>`;
+
     html += `
       <tr>
         <td>${r.survey_item_id}</td>
-        <td>${r.survey_title}</td>
+
+        <td>${r.tbl_survey?.survey_title ?? "-"}</td>
+
         <td>${r.survey_item}</td>
-        <td>${r.survey_item_type}</td>
-        <td>${r.survey_item_mandatory}</td>
+
         <td>
-          <button class="btn-warning edit-btn" data-id="${r.survey_item_id}">Edit</button>
-          <button class="btn-danger delete-btn" data-id="${r.survey_item_id}">Delete</button>
+          <span class="type-badge">${typeLabel}</span>
+        </td>
+
+        <td>${requiredLabel}</td>
+
+        <td>
+          <button class="btn-warning edit-btn" data-id="${r.survey_item_id}">
+            Edit
+          </button>
+          <button class="btn-danger delete-btn" data-id="${r.survey_item_id}">
+            Delete
+          </button>
         </td>
       </tr>
     `;

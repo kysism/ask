@@ -12,7 +12,10 @@ exports.getAll = async (req, res) => {
 
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
 
@@ -23,14 +26,22 @@ exports.create = async (req, res) => {
 
     const { data, error } = await supabase
       .from("tbl_survey")
-      .insert([{ survey_title, use_yn }])
+      .insert([
+        {
+          survey_title,
+          use_yn: use_yn ?? true,
+        },
+      ])
       .select();
 
     if (error) throw error;
 
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
 
@@ -39,17 +50,25 @@ exports.update = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const { survey_title, use_yn } = req.body;
+
     const { data, error } = await supabase
       .from("tbl_survey")
-      .update(req.body)
-      .eq("survey_id", id)
+      .update({
+        survey_title,
+        use_yn,
+      })
+      .eq("survey_id", Number(id))
       .select();
 
     if (error) throw error;
 
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
 
@@ -61,12 +80,15 @@ exports.remove = async (req, res) => {
     const { error } = await supabase
       .from("tbl_survey")
       .delete()
-      .eq("survey_id", id);
+      .eq("survey_id", Number(id));
 
     if (error) throw error;
 
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
