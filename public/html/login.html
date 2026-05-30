@@ -17,7 +17,6 @@
         font-family: Arial;
       }
 
-      /* CARD */
       .card {
         width: 440px;
         background: #fff;
@@ -26,7 +25,6 @@
         box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
       }
 
-      /* HEADER */
       .header {
         text-align: center;
         margin-bottom: 20px;
@@ -49,7 +47,6 @@
         margin-top: 6px;
       }
 
-      /* BUTTON */
       button {
         width: 100%;
         height: 52px;
@@ -60,20 +57,17 @@
         cursor: pointer;
       }
 
-      /* PRIMARY */
       .btn-primary {
         background: linear-gradient(135deg, #1976d2, #0d47a1);
         color: white;
       }
 
-      /* DANGER */
       .btn-danger {
         background: linear-gradient(135deg, #c62828, #8e0000);
         color: white;
         margin-top: 12px;
       }
 
-      /* INPUT */
       input {
         width: 100%;
         height: 52px;
@@ -84,13 +78,11 @@
         box-sizing: border-box;
       }
 
-      /* LOGIN AREA */
       .login-area {
         display: none;
         margin-top: 15px;
       }
 
-      /* STATUS */
       .status {
         margin-top: 18px;
         font-size: 13px;
@@ -102,7 +94,6 @@
 
   <body>
     <div class="card">
-      <!-- HEADER -->
       <div class="header">
         <img src="/img/koica.png" />
         <h1>KOICA Survey System</h1>
@@ -111,12 +102,12 @@
         </div>
       </div>
 
-      <!-- STEP 1 -->
+      <!-- GENERATE PASSWORD -->
       <button class="btn-primary" onclick="generatePassword()">
         GENERATE ACCESS TOKEN
       </button>
 
-      <!-- STEP 2 -->
+      <!-- LOGIN -->
       <div class="login-area" id="loginArea">
         <input
           type="password"
@@ -135,8 +126,14 @@
     <script>
       const API = "https://fcm-61ns.onrender.com/api";
 
+      // =========================
+      // STEP 1: GENERATE PASSWORD
+      // =========================
       async function generatePassword() {
-        const res = await fetch(`${API}/auth/generate`, { method: "POST" });
+        const res = await fetch(`${API}/auth/generate`, {
+          method: "POST",
+        });
+
         const json = await res.json();
 
         if (!json.success) {
@@ -145,14 +142,15 @@
           return;
         }
 
-        sessionStorage.removeItem("koica_survey_admin_pwd");
-
         document.getElementById("loginArea").style.display = "block";
 
         document.getElementById("message").innerText =
-          "Access token sent to registered admin devices.";
+          "Access token sent to admin devices (FCM).";
       }
 
+      // =========================
+      // STEP 2: VERIFY LOGIN
+      // =========================
       async function login() {
         const password = document.getElementById("password").value;
 
@@ -163,7 +161,9 @@
 
         const res = await fetch(`${API}/auth/verify`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ password }),
         });
 
@@ -175,7 +175,12 @@
           return;
         }
 
-        sessionStorage.setItem("koica_survey_admin_pwd", password);
+        // =========================
+        // IMPORTANT CHANGE HERE
+        // =========================
+        // store SESSION TOKEN (not password)
+        localStorage.setItem("admin_token", json.token);
+
         location.href = "/html/index.html";
       }
     </script>
