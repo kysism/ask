@@ -7,7 +7,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    index: false,
+  }),
+);
 
 // ROUTES
 app.use("/api/org", require("./routes/orgRoutes"));
@@ -23,13 +27,6 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public/html/login.html"));
 });
-
-/* STATIC BUT NO INDEX OVERRIDE */
-app.use(
-  express.static(path.join(__dirname, "public"), {
-    index: false,
-  }),
-);
 
 const PORT = process.env.PORT || 1000;
 
