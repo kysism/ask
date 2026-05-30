@@ -12,13 +12,11 @@ async function loadSurvey() {
 
   const data = result.data || [];
 
-  let html = `<option value="">Select Survey</option>`;
-
-  data.forEach((s) => {
-    html += `<option value="${s.survey_id}">${s.survey_title}</option>`;
-  });
-
-  document.getElementById("survey_id").innerHTML = html;
+  document.getElementById("survey_id").innerHTML =
+    `<option value="">Select Survey</option>` +
+    data
+      .map((s) => `<option value="${s.survey_id}">${s.survey_title}</option>`)
+      .join("");
 }
 
 /* =========================
@@ -41,24 +39,14 @@ async function loadItem() {
     html += `
       <tr>
         <td>${r.survey_item_id}</td>
-
-        <td>${r.tbl_survey?.survey_title ?? "-"}</td>
-
+        <td>${r.tbl_survey?.survey_title || "-"}</td>
         <td>${r.survey_item}</td>
-
-        <td>
-          ${r.survey_item_type === "S" ? "Select" : "Input"}
-        </td>
-
-        <td>
-          ${r.survey_item_mandatory ? "Required" : "Optional"}
-        </td>
-
+        <td>${r.survey_item_type}</td>
+        <td>${r.survey_item_mandatory ? "Y" : "N"}</td>
         <td>
           <button class="btn-warning edit-btn" data-id="${r.survey_item_id}">
             Edit
           </button>
-
           <button class="btn-danger delete-btn" data-id="${r.survey_item_id}">
             Delete
           </button>
@@ -71,35 +59,44 @@ async function loadItem() {
 }
 
 /* =========================
-   EVENT (FIXED)
+   CLICK EVENTS
 ========================= */
 document.addEventListener("click", async (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-
-  const id = btn.dataset.id;
-  if (!id) return;
-
-  /* EDIT */
-  if (btn.classList.contains("edit-btn")) {
-    const res = await fetch(`${API}/${id}`);
-    const result = await res.json();
-
-    const d = result.data;
-
-    editItem(
-      d.survey_item_id,
-      d.survey_item,
-      d.survey_id,
-      d.survey_item_type,
-      d.survey_item_mandatory,
-    );
-  }
+  const id = e.target.dataset.id;
 
   /* DELETE */
-  if (btn.classList.contains("delete-btn")) {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
+  if (e.target.classList.contains("delete-btn")) {
+    if (!id) return;
+
+    await fetch(`${API}/${id}`, {
+      method: "DELETE",
+    });
+
+    if (String(editItemId) === String(id)) resetForm();
+
     loadItem();
+  }
+
+  /* EDIT (FIX: no GET request anymore) */
+  if (e.target.classList.contains("edit-btn")) {
+    const row = e.target.closest("tr");
+
+    const item = {
+      survey_item_id: id,
+      survey_item: row.children[2].innerText,
+      survey_item_type: row.children[3].innerText,
+      survey_item_mandatory: row.children[4].innerText === "Y",
+      survey_title: row.children[1].innerText,
+      survey_id: document.getElementById("survey_id").value,
+    };
+
+    editItem(
+      item.survey_item_id,
+      item.survey_item,
+      item.survey_id,
+      item.survey_item_type,
+      item.survey_item_mandatory,
+    );
   }
 });
 
@@ -113,41 +110,50 @@ async function saveItem() {
   const survey_item_mandatory =
     document.getElementById("survey_item_mandatory").value === "true";
 
-  if (!survey_id || !survey_item) return alert("Fill fields");
+  if (!survey_id || !survey_item) {
+    alert("Fill fields");
+    return;
+  }
 
   let res;
-
-  const payload = {
-    survey_id,
-    survey_item,
-    survey_item_type,
-    survey_item_mandatory,
-  };
 
   if (editItemId) {
     res = await fetch(`${API}/${editItemId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        survey_id,
+        survey_item,
+        survey_item_type,
+        survey_item_mandatory,
+      }),
     });
   } else {
     res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        survey_id,
+        survey_item,
+        survey_item_type,
+        survey_item_mandatory,
+      }),
     });
   }
 
   const result = await res.json();
 
-  if (!result.success) return alert(result.message);
+  if (!result.success) {
+    alert(result.message);
+    return;
+  }
 
   resetForm();
   loadItem();
 }
 
 /* =========================
-   EDIT
+   EDIT SET
 ========================= */
 function editItem(id, item, survey_id, type, mandatory) {
   editItemId = id;
@@ -161,7 +167,7 @@ function editItem(id, item, survey_id, type, mandatory) {
   btn.innerText = "Update Item";
   btn.classList.add("btn-success");
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0 });
 }
 
 /* =========================
@@ -180,7 +186,7 @@ function resetForm() {
 }
 
 /* =========================
-   INIT
+   EVENTS INIT
 ========================= */
 document.getElementById("survey_id").addEventListener("change", loadItem);
 
