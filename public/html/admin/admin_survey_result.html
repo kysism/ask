@@ -3,9 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Survey Result Admin</title>
 
     <link rel="stylesheet" href="/css/admin_style.css" />
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -45,25 +47,51 @@
         width: 24px;
         height: 24px;
         background: #2563eb;
-        color: #fff;
+        color: white;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 12px;
+        flex-shrink: 0;
+      }
+
+      .answer-text {
+        flex: 1;
+      }
+
+      .chart-box {
+        height: 500px;
       }
     </style>
   </head>
 
   <body>
     <div class="container">
-      <h2>Survey Result</h2>
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+          "
+        >
+          <h2 style="margin: 0">Survey Result</h2>
+        </div>
+      </div>
 
       <!-- CHART -->
       <div class="card">
-        <div style="height: 500px">
+        <div class="chart-box">
           <canvas id="chart"></canvas>
         </div>
+      </div>
+
+      <!-- QUESTION REFERENCE -->
+      <div class="card">
+        <h3>Question Reference</h3>
+        <div id="questionLegend"></div>
       </div>
 
       <!-- SCORE -->

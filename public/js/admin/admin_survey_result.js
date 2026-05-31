@@ -23,11 +23,11 @@ async function load() {
 
       if (!item) return;
 
-      const title = item.survey_item;
+      const question = item.survey_item;
 
       if (item.survey_item_type === "S") {
-        if (!scoreMap[title]) {
-          scoreMap[title] = {
+        if (!scoreMap[question]) {
+          scoreMap[question] = {
             1: 0,
             2: 0,
             3: 0,
@@ -39,22 +39,26 @@ async function load() {
         const score = Number(r.survey_item_answer);
 
         if (score >= 1 && score <= 5) {
-          scoreMap[title][score]++;
+          scoreMap[question][score]++;
         }
       } else {
-        if (!textMap[title]) {
-          textMap[title] = [];
+        if (!textMap[question]) {
+          textMap[question] = [];
         }
 
-        textMap[title].push(r.survey_item_answer || "");
+        textMap[question].push(r.survey_item_answer || "");
       }
     });
 
     renderChart(scoreMap);
+    renderQuestionLegend(scoreMap);
     renderTable(scoreMap);
     renderText(textMap);
   } catch (err) {
     console.error(err);
+
+    document.getElementById("scoreTable").innerHTML =
+      "<div style='color:red'>Failed to load data</div>";
   }
 }
 
@@ -66,7 +70,9 @@ function renderChart(scoreMap) {
 
   const ctx = canvas.getContext("2d");
 
-  const labels = Object.keys(scoreMap);
+  const questions = Object.keys(scoreMap);
+
+  const labels = questions.map((_, idx) => `Q${idx + 1}`);
 
   const datasets = [1, 2, 3, 4, 5].map((score) => ({
     label:
@@ -74,7 +80,7 @@ function renderChart(scoreMap) {
       " - " +
       ["", "Very Bad", "Bad", "Normal", "Good", "Very Good"][score],
 
-    data: labels.map((q) => scoreMap[q][score]),
+    data: questions.map((q) => scoreMap[q][score]),
   }));
 
   if (chartInstance) {
@@ -100,12 +106,43 @@ function renderChart(scoreMap) {
 }
 
 /* =========================
-   TABLE
+   QUESTION LEGEND
+========================= */
+function renderQuestionLegend(scoreMap) {
+  let html = `
+    <table class="result-table">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Question</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  Object.keys(scoreMap).forEach((question, idx) => {
+    html += `
+        <tr>
+          <td>Q${idx + 1}</td>
+          <td>${question}</td>
+        </tr>
+      `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById("questionLegend").innerHTML = html;
+}
+
+/* =========================
+   SCORE SUMMARY
 ========================= */
 function renderTable(scoreMap) {
   let html = `
     <table class="result-table">
-
       <thead>
         <tr>
           <th>Question</th>
@@ -117,7 +154,6 @@ function renderTable(scoreMap) {
           <th>Total</th>
         </tr>
       </thead>
-
       <tbody>
   `;
 
@@ -148,7 +184,7 @@ function renderTable(scoreMap) {
 }
 
 /* =========================
-   TEXT ANSWERS
+   OPEN ANSWERS
 ========================= */
 function renderText(textMap) {
   let html = "";
@@ -156,31 +192,24 @@ function renderText(textMap) {
   Object.entries(textMap).forEach(([question, answers]) => {
     html += `
         <div class="text-group">
-
           <h4>${question}</h4>
-
-          <div class="answer-list">
       `;
 
     answers.forEach((answer, idx) => {
       html += `
-          <div class="answer-item">
+            <div class="answer-item">
+              <div class="answer-number">
+                ${idx + 1}
+              </div>
 
-            <div class="answer-number">
-              ${idx + 1}
+              <div class="answer-text">
+                ${answer}
+              </div>
             </div>
-
-            <div class="answer-text">
-              ${answer}
-            </div>
-
-          </div>
-        `;
+          `;
     });
 
     html += `
-          </div>
-
         </div>
       `;
   });
@@ -188,4 +217,7 @@ function renderText(textMap) {
   document.getElementById("textBox").innerHTML = html;
 }
 
+/* =========================
+   INIT
+========================= */
 load();
