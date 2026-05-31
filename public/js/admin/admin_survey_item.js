@@ -205,7 +205,6 @@ function editItem(id, item, survey_id, type, mandatory) {
 
   const select = el("survey_id");
 
-  // 🔥 핵심: 옵션 로딩 이후 값 강제 반영
   setTimeout(() => {
     select.value = String(survey_id);
     select.dispatchEvent(new Event("change"));

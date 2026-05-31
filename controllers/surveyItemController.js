@@ -1,8 +1,4 @@
 const supabase = require("../services/supabaseService");
-
-/* =========================
-   GET ALL (with JOIN)
-========================= */
 exports.getAll = async (req, res) => {
   try {
     const { survey_id } = req.query;
@@ -13,15 +9,25 @@ exports.getAll = async (req, res) => {
       .order("survey_item_id", { ascending: false });
 
     if (survey_id) {
-      query = query.eq("survey_id", Number(survey_id));
+      query = query.eq("survey_id", survey_id);
     }
 
     const { data, error } = await query;
 
     if (error) throw error;
 
-    res.json({ success: true, data });
+    const safeData = (data || []).map((row) => ({
+      ...row,
+      survey_id: String(row.survey_id),
+      tbl_survey: row.tbl_survey || { survey_title: "-" },
+    }));
+
+    res.json({
+      success: true,
+      data: safeData,
+    });
   } catch (e) {
+    console.error(e);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -39,13 +45,27 @@ exports.getOne = async (req, res) => {
     const { data, error } = await supabase
       .from("tbl_survey_item")
       .select("*")
-      .eq("survey_item_id", Number(id))
+      .eq("survey_item_id", id)
       .single();
 
     if (error) throw error;
 
-    res.json({ success: true, data });
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: "Not Found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...data,
+        survey_id: String(data.survey_id),
+      },
+    });
   } catch (e) {
+    console.error(e);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
