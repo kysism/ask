@@ -140,6 +140,8 @@ async function saveClass() {
 
     if (!result.success) throw new Error(result.message);
 
+    alert("Saved");
+
     resetForm();
     await loadClass();
   } catch (err) {
@@ -187,6 +189,8 @@ async function deleteClass(id) {
     if (!result.success) throw new Error(result.message);
 
     if (editClassId === id) resetForm();
+
+    alert("Deleted");
 
     await loadClass();
   } catch (err) {

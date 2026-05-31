@@ -123,6 +123,8 @@ async function saveStudent() {
       throw new Error(result.message);
     }
 
+    alert("Saved");
+
     resetForm();
     await loadStudent();
   } catch (err) {
@@ -161,6 +163,8 @@ async function deleteStudent(id) {
     if (!result.success) {
       throw new Error(result.message);
     }
+
+    alert("Deleted");
 
     resetForm();
     await loadStudent();

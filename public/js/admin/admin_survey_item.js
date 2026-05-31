@@ -4,26 +4,44 @@ const SURVEY_API = "/api/survey-title";
 let editItemId = null;
 
 /* =========================
+   SAFE DOM
+========================= */
+function el(id) {
+  return document.getElementById(id);
+}
+
+/* =========================
    LOAD SURVEY LIST
 ========================= */
-async function loadSurvey() {
-  const res = await fetch(SURVEY_API);
-  const result = await res.json();
+async function loadSurvey(callback) {
+  try {
+    const res = await fetch(SURVEY_API);
+    const result = await res.json();
 
-  const data = result.data || [];
+    const data = result.data || [];
 
-  document.getElementById("survey_id").innerHTML =
-    `<option value="">Select Survey</option>` +
-    data
-      .map((s) => `<option value="${s.survey_id}">${s.survey_title}</option>`)
-      .join("");
+    const select = el("survey_id");
+
+    select.innerHTML =
+      `<option value="">Select Survey</option>` +
+      data
+        .map(
+          (s) =>
+            `<option value="${String(s.survey_id)}">${s.survey_title}</option>`,
+        )
+        .join("");
+
+    if (callback) callback();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 /* =========================
    LOAD ITEMS
 ========================= */
 async function loadItem() {
-  const survey_id = document.getElementById("survey_id").value;
+  const survey_id = el("survey_id").value;
 
   let url = API;
   if (survey_id) url += `?survey_id=${survey_id}`;
@@ -47,6 +65,7 @@ async function loadItem() {
           <button class="btn-warning edit-btn" data-id="${r.survey_item_id}">
             Edit
           </button>
+
           <button class="btn-danger delete-btn" data-id="${r.survey_item_id}">
             Delete
           </button>
@@ -55,7 +74,7 @@ async function loadItem() {
     `;
   });
 
-  document.getElementById("itemBody").innerHTML = html;
+  el("itemBody").innerHTML = html;
 }
 
 /* =========================
@@ -72,12 +91,14 @@ document.addEventListener("click", async (e) => {
       method: "DELETE",
     });
 
+    alert("Deleted");
+
     if (String(editItemId) === String(id)) resetForm();
 
     loadItem();
   }
 
-  /* EDIT (FIX: no GET request anymore) */
+  /* EDIT */
   if (e.target.classList.contains("edit-btn")) {
     const row = e.target.closest("tr");
 
@@ -86,8 +107,7 @@ document.addEventListener("click", async (e) => {
       survey_item: row.children[2].innerText,
       survey_item_type: row.children[3].innerText,
       survey_item_mandatory: row.children[4].innerText === "Y",
-      survey_title: row.children[1].innerText,
-      survey_id: document.getElementById("survey_id").value,
+      survey_id: el("survey_id").value,
     };
 
     editItem(
@@ -101,14 +121,13 @@ document.addEventListener("click", async (e) => {
 });
 
 /* =========================
-   SAVE
+   SAVE ITEM
 ========================= */
 async function saveItem() {
-  const survey_id = document.getElementById("survey_id").value;
-  const survey_item = document.getElementById("survey_item").value.trim();
-  const survey_item_type = document.getElementById("survey_item_type").value;
-  const survey_item_mandatory =
-    document.getElementById("survey_item_mandatory").value === "true";
+  const survey_id = el("survey_id").value;
+  const survey_item = el("survey_item").value.trim();
+  const survey_item_type = el("survey_item_type").value;
+  const survey_item_mandatory = el("survey_item_mandatory").value === "true";
 
   if (!survey_id || !survey_item) {
     alert("Fill fields");
@@ -120,7 +139,9 @@ async function saveItem() {
   if (editItemId) {
     res = await fetch(`${API}/${editItemId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         survey_id,
         survey_item,
@@ -131,7 +152,9 @@ async function saveItem() {
   } else {
     res = await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         survey_id,
         survey_item,
@@ -148,52 +171,64 @@ async function saveItem() {
     return;
   }
 
+  alert("Saved");
+
   resetForm();
   loadItem();
 }
 
 /* =========================
-   EDIT SET
+   EDIT ITEM
 ========================= */
 function editItem(id, item, survey_id, type, mandatory) {
   editItemId = id;
 
-  document.getElementById("survey_item").value = item;
-  document.getElementById("survey_id").value = survey_id;
-  document.getElementById("survey_item_type").value = type;
-  document.getElementById("survey_item_mandatory").value = String(mandatory);
+  el("survey_item").value = item;
+  el("survey_item_type").value = type;
+  el("survey_item_mandatory").value = String(mandatory);
 
-  const btn = document.getElementById("saveBtn");
+  // FIX: select must match string value
+  el("survey_id").value = String(survey_id);
+
+  const btn = el("saveBtn");
   btn.innerText = "Update Item";
+  btn.classList.remove("btn-primary");
   btn.classList.add("btn-success");
 
   window.scrollTo({ top: 0 });
 }
 
 /* =========================
-   RESET
+   RESET FORM
 ========================= */
 function resetForm() {
   editItemId = null;
 
-  document.getElementById("survey_item").value = "";
-  document.getElementById("survey_item_type").value = "S";
-  document.getElementById("survey_item_mandatory").value = "true";
+  el("survey_item").value = "";
+  el("survey_item_type").value = "S";
+  el("survey_item_mandatory").value = "true";
 
-  const btn = document.getElementById("saveBtn");
+  const btn = el("saveBtn");
   btn.innerText = "Add Item";
+
   btn.classList.remove("btn-success");
   btn.classList.add("btn-primary");
 }
 
 /* =========================
-   EVENTS INIT
+   EVENTS
 ========================= */
-document.getElementById("survey_id").addEventListener("change", loadItem);
+el("survey_id").addEventListener("change", loadItem);
 
+/* =========================
+   INIT
+========================= */
 loadSurvey();
 loadItem();
 
+/* =========================
+   EXPORT
+========================= */
 window.saveItem = saveItem;
 window.editItem = editItem;
 window.resetForm = resetForm;

@@ -90,6 +90,8 @@ async function saveSurvey() {
 
   if (!result.success) return alert(result.message);
 
+  alert("Saved");
+
   resetForm();
   loadSurvey();
 }
