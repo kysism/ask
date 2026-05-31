@@ -2,6 +2,14 @@ const API = "/api/survey-result";
 
 const survey_id = new URLSearchParams(location.search).get("survey_id");
 
+const SCORE_LABELS = {
+  1: "Very Bad",
+  2: "Bad",
+  3: "Normal",
+  4: "Good",
+  5: "Very Good",
+};
+
 let chartInstance = null;
 
 /* =========================
@@ -9,8 +17,9 @@ let chartInstance = null;
 ========================= */
 async function load() {
   try {
-    const res = await fetch(`${API}?survey_id=${survey_id}`);
+    if (!survey_id) return;
 
+    const res = await fetch(`${API}?survey_id=${survey_id}`);
     const result = await res.json();
 
     const data = result.data || [];
@@ -18,74 +27,63 @@ async function load() {
     const scoreMap = {};
     const textMap = {};
 
+    const questionIndexMap = {};
+    let qCounter = 1;
+
+    /* =========================
+       GROUPING
+    ========================= */
     data.forEach((r) => {
       const item = r.tbl_survey_item;
-
       if (!item) return;
 
-      const question = item.survey_item;
+      const qKey = item.survey_item;
+
+      if (!questionIndexMap[qKey]) {
+        questionIndexMap[qKey] = `Q${qCounter++}`;
+      }
 
       if (item.survey_item_type === "S") {
-        if (!scoreMap[question]) {
-          scoreMap[question] = {
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0,
-            5: 0,
-          };
+        const answer = Number(r.survey_item_answer);
+
+        if (!scoreMap[qKey]) {
+          scoreMap[qKey] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, total: 0 };
         }
 
-        const score = Number(r.survey_item_answer);
-
-        if (score >= 1 && score <= 5) {
-          scoreMap[question][score]++;
+        if (answer >= 1 && answer <= 5) {
+          scoreMap[qKey][answer]++;
+          scoreMap[qKey].total++;
         }
       } else {
-        if (!textMap[question]) {
-          textMap[question] = [];
-        }
-
-        textMap[question].push(r.survey_item_answer || "");
+        if (!textMap[qKey]) textMap[qKey] = [];
+        textMap[qKey].push(r.survey_item_answer);
       }
     });
 
-    renderChart(scoreMap);
-    renderQuestionLegend(scoreMap);
-    renderTable(scoreMap);
-    renderText(textMap);
+    renderChart(scoreMap, questionIndexMap);
+    renderTable(scoreMap, questionIndexMap);
+    renderText(textMap, questionIndexMap);
   } catch (err) {
     console.error(err);
-
-    document.getElementById("scoreTable").innerHTML =
-      "<div style='color:red'>Failed to load data</div>";
   }
 }
 
 /* =========================
-   CHART
+   CHART (Q1, Q2 only)
 ========================= */
-function renderChart(scoreMap) {
-  const canvas = document.getElementById("chart");
+function renderChart(scoreMap, qIndexMap) {
+  const ctx = document.getElementById("chart");
 
-  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
 
-  const questions = Object.keys(scoreMap);
-
-  const labels = questions.map((_, idx) => `Q${idx + 1}`);
+  const labels = Object.keys(scoreMap).map((q) => qIndexMap[q]);
 
   const datasets = [1, 2, 3, 4, 5].map((score) => ({
-    label:
-      score +
-      " - " +
-      ["", "Very Bad", "Bad", "Normal", "Good", "Very Good"][score],
-
-    data: questions.map((q) => scoreMap[q][score]),
+    label: SCORE_LABELS[score],
+    data: Object.values(scoreMap).map((q) => q[score]),
   }));
 
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
+  if (chartInstance) chartInstance.destroy();
 
   chartInstance = new Chart(ctx, {
     type: "bar",
@@ -95,9 +93,15 @@ function renderChart(scoreMap) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top" },
+      },
       scales: {
+        x: {
+          stacked: true,
+        },
         y: {
+          stacked: true,
           beginAtZero: true,
         },
       },
@@ -106,41 +110,9 @@ function renderChart(scoreMap) {
 }
 
 /* =========================
-   QUESTION LEGEND
+   TABLE (Q1 style + no wrap)
 ========================= */
-function renderQuestionLegend(scoreMap) {
-  let html = `
-    <table class="result-table">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Question</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  Object.keys(scoreMap).forEach((question, idx) => {
-    html += `
-        <tr>
-          <td>Q${idx + 1}</td>
-          <td>${question}</td>
-        </tr>
-      `;
-  });
-
-  html += `
-      </tbody>
-    </table>
-  `;
-
-  document.getElementById("questionLegend").innerHTML = html;
-}
-
-/* =========================
-   SCORE SUMMARY
-========================= */
-function renderTable(scoreMap) {
+function renderTable(scoreMap, qIndexMap) {
   let html = `
     <table class="result-table">
       <thead>
@@ -157,61 +129,48 @@ function renderTable(scoreMap) {
       <tbody>
   `;
 
-  Object.entries(scoreMap).forEach(([question, score]) => {
-    const total = score[1] + score[2] + score[3] + score[4] + score[5];
-
+  Object.entries(scoreMap).forEach(([q, v]) => {
     html += `
-        <tr>
-          <td>${question}</td>
-
-          <td>${score[1]}</td>
-          <td>${score[2]}</td>
-          <td>${score[3]}</td>
-          <td>${score[4]}</td>
-          <td>${score[5]}</td>
-
-          <td>${total}</td>
-        </tr>
-      `;
+      <tr>
+        <td>${qIndexMap[q]}</td>
+        <td>${v[1]}</td>
+        <td>${v[2]}</td>
+        <td>${v[3]}</td>
+        <td>${v[4]}</td>
+        <td>${v[5]}</td>
+        <td>${v.total}</td>
+      </tr>
+    `;
   });
 
-  html += `
-      </tbody>
-    </table>
-  `;
+  html += "</tbody></table>";
 
   document.getElementById("scoreTable").innerHTML = html;
 }
 
 /* =========================
-   OPEN ANSWERS
+   TEXT
 ========================= */
-function renderText(textMap) {
+function renderText(textMap, qIndexMap) {
   let html = "";
 
-  Object.entries(textMap).forEach(([question, answers]) => {
+  Object.entries(textMap).forEach(([q, arr]) => {
     html += `
-        <div class="text-group">
-          <h4>${question}</h4>
-      `;
+      <div class="text-group">
+        <h4>${qIndexMap[q]}</h4>
+        <div>
+    `;
 
-    answers.forEach((answer, idx) => {
+    arr.forEach((v, i) => {
       html += `
-            <div class="answer-item">
-              <div class="answer-number">
-                ${idx + 1}
-              </div>
-
-              <div class="answer-text">
-                ${answer}
-              </div>
-            </div>
-          `;
-    });
-
-    html += `
+        <div class="answer-item">
+          <div class="answer-number">${i + 1}</div>
+          <div>${v}</div>
         </div>
       `;
+    });
+
+    html += `</div></div>`;
   });
 
   document.getElementById("textBox").innerHTML = html;
