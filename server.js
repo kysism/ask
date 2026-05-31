@@ -22,6 +22,7 @@ app.use("/api/survey-title", require("./routes/surveyTitleRoutes"));
 app.use("/api/survey-item", require("./routes/surveyItemRoutes"));
 app.use("/api/survey-result", require("./routes/surveyResultRoutes"));
 app.use("/api/survey-view", require("./routes/surveyViewRoutes"));
+app.use("/api/survey", require("./routes/surveyRoutes"));
 
 /* ROOT EXPLICIT */
 app.get("/", (req, res) => {
