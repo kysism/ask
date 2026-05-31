@@ -164,8 +164,10 @@ function editClass(id, name, org_id) {
   if (orgEl) orgEl.value = org_id || "";
 
   if (btn) {
-    btn.innerText = "Update Class";
     btn.classList.remove("btn-primary");
+    btn.classList.add("btn-success");
+
+    btn.innerText = "Update Class";
   }
 }
 
@@ -200,15 +202,18 @@ function resetForm() {
   editClassId = null;
 
   const nameEl = document.getElementById("class_nm");
+  const orgEl = document.getElementById("org_id");
   const btn = document.getElementById("saveBtn");
 
   if (nameEl) nameEl.value = "";
+  if (orgEl) orgEl.value = "";
 
   if (btn) {
+    btn.classList.remove("btn-success");
+    btn.classList.add("btn-primary");
+
     btn.innerText = "Add Class";
   }
-  btn.classList.remove("btn-success");
-  btn.classList.add("btn-primary");
 }
 
 // =========================

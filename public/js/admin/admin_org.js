@@ -148,15 +148,16 @@ async function saveOrg() {
 // EDIT
 // =========================
 function editOrg(id, name, place) {
-  console.log("EDIT", id, name, place);
-
   editOrgId = id;
 
   document.getElementById("org_nm").value = name || "";
   document.getElementById("org_place").value = place || "";
 
   const btn = document.getElementById("saveBtn");
+
   btn.classList.remove("btn-primary");
+  btn.classList.add("btn-success");
+
   btn.innerText = "Update Organization";
 }
 
@@ -200,6 +201,7 @@ function resetForm() {
   document.getElementById("org_place").value = "";
 
   const btn = document.getElementById("saveBtn");
+
   btn.classList.remove("btn-success");
   btn.classList.add("btn-primary");
 
