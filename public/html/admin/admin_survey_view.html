@@ -87,7 +87,34 @@
 
   <body>
     <div class="container">
-      <h2>Survey Admin</h2>
+      <!-- HEADER -->
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+          "
+        >
+          <h2 style="margin: 0">Survey Admin</h2>
+
+          <a
+            href="/html/index.html"
+            style="
+              padding: 10px 14px;
+              background: #111827;
+              color: white;
+              border-radius: 10px;
+              text-decoration: none;
+              font-size: 13px;
+              white-space: nowrap;
+            "
+          >
+            Home
+          </a>
+        </div>
+      </div>
 
       <div class="layout">
         <!-- LEFT -->
@@ -100,7 +127,7 @@
         <div class="card">
           <h3 id="title">Select Survey</h3>
 
-          <!--  META SELECT (기관 / 반 / 학생) -->
+          <!-- Organization / Class / Student -->
           <div class="meta-select">
             <select id="orgSelect">
               <option value="">Select Organization</option>
@@ -128,7 +155,6 @@
       </div>
     </div>
 
-    <!-- <script src="/js/common/common.js"></script> -->
     <script src="/js/common/authGuard.js"></script>
     <script type="module" src="/js/admin/admin_survey_view.js"></script>
   </body>
