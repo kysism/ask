@@ -1,4 +1,4 @@
-import { supabase } from "../../js/common/supabaseClient.js";
+const API = "/api/survey";
 
 const survey_id = new URLSearchParams(location.search).get("survey_id");
 
@@ -6,217 +6,126 @@ let questions = [];
 let answers = {};
 
 /* =========================
-         PREVENT BACK
-      ========================= */
-history.pushState(null, null, location.href);
-
-window.onpopstate = function () {
-  history.go(1);
-};
+   SAFE DOM
+========================= */
+function el(id) {
+  return document.getElementById(id);
+}
 
 /* =========================
-         GET USER IP
-      ========================= */
+   GET IP (서버로 옮겨도 됨)
+========================= */
 async function getIp() {
   try {
     const res = await fetch("https://api.ipify.org?format=json");
-
     const data = await res.json();
-
     return data.ip;
-  } catch (e) {
+  } catch {
     return "unknown";
   }
 }
 
 /* =========================
-         CHECK DUPLICATE
-      ========================= */
-async function checkDuplicate() {
-  const ip = await getIp();
-
-  const { data } = await supabase
-    .from("tbl_result")
-    .select("id")
-    .eq("survey_id", survey_id)
-    .eq("ip_address", ip)
-    .limit(1);
-
-  if (data && data.length > 0) {
-    document.getElementById("surveyBox").innerHTML = `
-            <div class="block-box">
-
-              <h2>
-                Survey Already Submitted
-              </h2>
-
-              <p>
-                You already completed this survey.
-                <br /><br />
-
-                لقد قمت بالإجابة على هذا الاستبيان من قبل
-              </p>
-
-            </div>
-          `;
-
-    return true;
-  }
-
-  return false;
-}
-
-/* =========================
-         LOAD TITLE
-      ========================= */
+   LOAD TITLE (NODE API)
+========================= */
 async function loadTitle() {
-  const { data } = await supabase
-    .from("tbl_survey")
-    .select("*")
-    .eq("survey_id", survey_id)
-    .single();
+  if (!survey_id) return;
 
-  if (!data) return;
+  const res = await fetch(`${API}/title?survey_id=${survey_id}`);
+  const result = await res.json();
 
-  document.getElementById("surveyTitle").innerText = data.survey_title;
+  if (result?.data && el("surveyTitle")) {
+    el("surveyTitle").innerText = result.data.survey_title;
+  }
 }
 
 /* =========================
-         LOAD QUESTIONS
-      ========================= */
+   LOAD QUESTIONS (NODE API)
+========================= */
 async function loadQuestions() {
-  const duplicated = await checkDuplicate();
+  const box = el("surveyBox");
+  if (!box) return;
 
-  if (duplicated) return;
+  const res = await fetch(`${API}/items?survey_id=${survey_id}`);
+  const result = await res.json();
 
-  const { data } = await supabase
-    .from("tbl_survey_item")
-    .select("*")
-    .eq("survey_id", survey_id)
-    .order("survey_item_id");
-
-  questions = data || [];
+  questions = result.data || [];
 
   let html = "";
 
   questions.forEach((q, idx) => {
-    const required = q.survey_item_mandatory
-      ? `<span class="required">*</span>`
-      : "";
+    const required = q.survey_item_mandatory ? "*" : "";
 
-    /* SUBJECTIVE */
     if (q.survey_item_type === "I") {
       html += `
-              <div class="question-card">
+        <div class="question-card">
+          <div class="question-title">
+            ${idx + 1}. ${q.survey_item} ${required}
+          </div>
 
-                <div class="question-title">
-                  ${idx + 1}. ${q.survey_item}
-                  ${required}
-                </div>
-
-                <textarea
-                  placeholder="Write your answer here | اكتب إجابتك هنا"
-                  oninput="setAnswer(${q.survey_item_id}, this.value)"
-                ></textarea>
-
-              </div>
-            `;
+          <textarea
+            oninput="setAnswer(${q.survey_item_id}, this.value)"
+          ></textarea>
+        </div>
+      `;
     } else {
-      /* OBJECTIVE */
       const options = [
-        ["1", "Very Bad", "سيء جدا"],
-        ["2", "Bad", "سيء"],
-        ["3", "Normal", "عادي"],
-        ["4", "Good", "جيد"],
-        ["5", "Very Good", "ممتاز"],
+        ["1", "Very Bad"],
+        ["2", "Bad"],
+        ["3", "Normal"],
+        ["4", "Good"],
+        ["5", "Very Good"],
       ];
 
       html += `
-              <div class="question-card">
+        <div class="question-card">
+          <div class="question-title">
+            ${idx + 1}. ${q.survey_item} ${required}
+          </div>
 
-                <div class="question-title">
-                  ${idx + 1}. ${q.survey_item}
-                  ${required}
-                </div>
+          <div class="scale-grid">
+            ${options
+              .map(
+                (o) => `
+              <div class="scale-option">
+                <input
+                  type="radio"
+                  name="q_${q.survey_item_id}"
+                  onchange="setAnswer(${q.survey_item_id}, '${o[0]}')"
+                />
 
-                <div class="scale-grid">
-
-                  ${options
-                    .map(
-                      (o) => `
-                    <div class="scale-option">
-
-                      <input
-                        type="radio"
-                        id="q_${q.survey_item_id}_${o[0]}"
-                        name="q_${q.survey_item_id}"
-                        value="${o[0]}"
-                        onchange="setAnswer(${q.survey_item_id}, '${o[0]}')"
-                      />
-
-                      <label for="q_${q.survey_item_id}_${o[0]}">
-
-                        <div class="scale-score">
-                          ${o[0]}
-                        </div>
-
-                        <div>
-                          ${o[1]}
-                          <br />
-                          ${o[2]}
-                        </div>
-
-                      </label>
-
-                    </div>
-                  `,
-                    )
-                    .join("")}
-
-                </div>
-
+                <label>
+                  <div>${o[0]}</div>
+                  <div>${o[1]}</div>
+                </label>
               </div>
-            `;
+            `,
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
     }
   });
 
   html += `
-          <div class="submit-area">
+    <button onclick="submitSurvey()">Submit</button>
+  `;
 
-            <button
-              class="submit-btn"
-              onclick="submitSurvey()"
-            >
-              Submit Survey
-              |
-              إرسال الاستبيان
-            </button>
-
-          </div>
-        `;
-
-  document.getElementById("surveyBox").innerHTML = html;
+  box.innerHTML = html;
 }
 
 /* =========================
-         SET ANSWER
-      ========================= */
+   ANSWERS
+========================= */
 window.setAnswer = function (id, value) {
   answers[id] = value;
 };
 
 /* =========================
-         SUBMIT
-      ========================= */
+   SUBMIT (NODE API)
+========================= */
 window.submitSurvey = async function () {
-  for (const q of questions) {
-    if (q.survey_item_mandatory && !answers[q.survey_item_id]) {
-      alert("Please complete required fields | من فضلك أكمل الحقول المطلوبة");
-
-      return;
-    }
-  }
-
   const ip = await getIp();
 
   const payload = Object.keys(answers).map((id) => ({
@@ -226,40 +135,28 @@ window.submitSurvey = async function () {
     ip_address: ip,
   }));
 
-  const { error } = await supabase.from("tbl_result").insert(payload);
+  const res = await fetch("/api/survey/submit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 
-  if (error) {
-    alert("Save failed | فشل الحفظ");
+  const result = await res.json();
 
+  if (!result.success) {
+    alert("Save failed");
     return;
   }
 
-  document.getElementById("surveyBox").innerHTML = `
-          <div class="thank-you">
-
-            <h2>
-              Thank You
-              |
-              شكرا لك
-            </h2>
-
-            <p>
-              Thank you for answering the survey
-              and giving your valuable time.
-              <br /><br />
-
-              شكرا لإجابتك على الاستبيان
-              ولمنحنا وقتك الثمين
-            </p>
-
-          </div>
-        `;
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
+  el("surveyBox").innerHTML = `<div>Thank You</div>`;
 };
 
-loadTitle();
-loadQuestions();
+/* =========================
+   INIT
+========================= */
+window.addEventListener("DOMContentLoaded", () => {
+  loadTitle();
+  loadQuestions();
+});
