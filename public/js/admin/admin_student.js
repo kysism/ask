@@ -123,8 +123,8 @@ async function saveStudent() {
       throw new Error(result.message);
     }
 
-    resetForm(); // 🔥 핵심
-    await loadStudent(); // 🔥 리스트 갱신
+    resetForm();
+    await loadStudent();
   } catch (err) {
     alert(err.message);
   }
@@ -162,7 +162,6 @@ async function deleteStudent(id) {
       throw new Error(result.message);
     }
 
-    // 🔥 삭제 후 UI 완전 초기화
     resetForm();
     await loadStudent();
   } catch (err) {
@@ -180,7 +179,7 @@ function resetForm() {
   document.getElementById("class_id").value = "";
 
   const btn = document.getElementById("saveBtn");
-  btn.innerText = "Add Student | إضافة طالب";
+  btn.innerText = "Add Student";
   btn.classList.remove("btn-success");
   btn.classList.add("btn-primary");
 }

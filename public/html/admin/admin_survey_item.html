@@ -66,9 +66,7 @@
     <div class="container">
       <div class="card">
         <div class="top-actions">
-          <h1 class="page-title">
-            Survey Item Management | إدارة أسئلة الاستبيان
-          </h1>
+          <h1 class="page-title">Survey Item Management</h1>
 
           <a
             href="/html/index.html"
@@ -82,7 +80,7 @@
               white-space: nowrap;
             "
           >
-            Home | الرئيسية
+            Home
           </a>
         </div>
 
@@ -90,29 +88,23 @@
         <div class="form-grid">
           <select id="survey_id"></select>
 
-          <input
-            id="survey_item"
-            type="text"
-            placeholder="Survey Item | سؤال الاستبيان"
-          />
+          <input id="survey_item" type="text" placeholder="Survey Item" />
 
           <select id="survey_item_type">
-            <option value="S">Select (Score) | اختيار</option>
-            <option value="I">Input (Text) | إدخال نص</option>
+            <option value="S">Select (Score)</option>
+            <option value="I">Input (Text)</option>
           </select>
 
           <select id="survey_item_mandatory">
-            <option value="true">Required | إجباري</option>
-            <option value="false">Optional | اختياري</option>
+            <option value="true">Required</option>
+            <option value="false">Optional</option>
           </select>
 
           <button id="saveBtn" class="btn-primary" onclick="saveItem()">
-            Add Item | إضافة سؤال
+            Add Item
           </button>
 
-          <button class="btn-gray" onclick="resetForm()">
-            Reset | إعادة ضبط
-          </button>
+          <button class="btn-gray" onclick="resetForm()">Reset</button>
         </div>
       </div>
 
@@ -139,7 +131,7 @@
       </div>
     </div>
 
-    <script src="/js/common/common.js"></script>
+    <!-- <script src="/js/common/common.js"></script> -->
     <script src="/js/common/authGuard.js"></script>
     <script type="module" src="/js/admin/admin_survey_item.js"></script>
   </body>

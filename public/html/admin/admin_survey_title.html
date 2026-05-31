@@ -69,9 +69,7 @@
       <!-- FORM -->
       <div class="card">
         <div class="top-bar">
-          <h1 class="page-title">
-            Survey Title Management | إدارة عناوين الاستبيان
-          </h1>
+          <h1 class="page-title">Survey Title Management</h1>
 
           <a
             href="/html/index.html"
@@ -90,25 +88,19 @@
         </div>
 
         <div class="form-grid">
-          <input
-            id="survey_title"
-            type="text"
-            placeholder="Survey Title | عنوان الاستبيان"
-          />
+          <input id="survey_title" type="text" placeholder="Survey Title" />
 
           <div class="switch-box">
             <input type="checkbox" id="use_yn" checked />
 
-            <label for="use_yn"> Use Survey | تفعيل الاستبيان </label>
+            <label for="use_yn">Use Survey</label>
           </div>
 
           <button id="saveBtn" class="btn-primary" onclick="saveSurvey()">
-            Add Survey | إضافة استبيان
+            Add Survey
           </button>
 
-          <button class="btn-gray" onclick="resetForm()">
-            Reset | إعادة ضبط
-          </button>
+          <button class="btn-gray" onclick="resetForm()">Reset</button>
         </div>
       </div>
 
@@ -121,11 +113,11 @@
               <tr>
                 <th>ID</th>
 
-                <th>Survey Title | عنوان الاستبيان</th>
+                <th>Survey Title</th>
 
-                <th>Status | الحالة</th>
+                <th>Status</th>
 
-                <th>Action | الإجراءات</th>
+                <th>Action</th>
               </tr>
             </thead>
 
@@ -138,7 +130,7 @@
       </div>
     </div>
 
-    <script src="/js/common/common.js"></script>
+    <!-- <script src="/js/common/common.js"></script> -->
     <script src="/js/common/authGuard.js"></script>
     <script type="module" src="/js/admin/admin_survey_title.js"></script>
   </body>

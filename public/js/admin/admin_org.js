@@ -201,7 +201,7 @@ function resetForm() {
 
   const btn = document.getElementById("saveBtn");
 
-  btn.innerText = "Add Organization | إضافة مؤسسة";
+  btn.innerText = "Add Organization";
 }
 
 // =========================

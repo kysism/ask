@@ -202,7 +202,7 @@ function resetForm() {
   if (nameEl) nameEl.value = "";
 
   if (btn) {
-    btn.innerText = "Add Class | إضافة فصل";
+    btn.innerText = "Add Class";
   }
 }
 

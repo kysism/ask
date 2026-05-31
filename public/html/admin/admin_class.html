@@ -31,7 +31,7 @@
       <!-- Page Header -->
       <div class="card">
         <div class="top-bar">
-          <h1 class="page-title">Class Management | إدارة الفصول</h1>
+          <h1 class="page-title">Class Management</h1>
 
           <a
             href="/html/index.html"
@@ -45,26 +45,20 @@
               white-space: nowrap;
             "
           >
-            Home | الرئيسية
+            Home
           </a>
         </div>
 
         <div class="form-grid">
           <select id="org_id"></select>
 
-          <input
-            type="text"
-            id="class_nm"
-            placeholder="Class Name | اسم الفصل"
-          />
+          <input type="text" id="class_nm" placeholder="Class Name" />
 
           <button id="saveBtn" class="btn-primary" onclick="saveClass()">
-            Add Class | إضافة فصل
+            Add Class
           </button>
 
-          <button class="btn-gray" onclick="resetForm()">
-            Reset | إعادة ضبط
-          </button>
+          <button class="btn-gray" onclick="resetForm()">Reset</button>
         </div>
       </div>
 
@@ -76,9 +70,9 @@
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Organization | المؤسسة</th>
-                <th>Class Name | اسم الفصل</th>
-                <th>Action | الإجراءات</th>
+                <th>Organization</th>
+                <th>Class Name</th>
+                <th>Action</th>
               </tr>
             </thead>
 
@@ -90,7 +84,7 @@
         <div id="mobileClassBody" class="mobile-card"></div>
       </div>
     </div>
-    <script src="/js/common/common.js"></script>
+    <!-- <script src="/js/common/common.js"></script> -->
     <script src="/js/common/authGuard.js"></script>
     <script type="module" src="/js/admin/admin_class.js"></script>
   </body>

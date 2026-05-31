@@ -30,7 +30,7 @@
     <div class="container">
       <div class="card">
         <div class="top-bar">
-          <h1 class="page-title">Student Management | إدارة الطلبة</h1>
+          <h1 class="page-title">Student Management</h1>
 
           <a
             href="/html/index.html"
@@ -44,26 +44,20 @@
               white-space: nowrap;
             "
           >
-            Home | الرئيسية
+            Home
           </a>
         </div>
 
         <div class="form-grid">
           <select id="class_id"></select>
 
-          <input
-            type="text"
-            id="student_nm"
-            placeholder="Student Name | اسم الطالب"
-          />
+          <input type="text" id="student_nm" placeholder="Student Name" />
 
           <button id="saveBtn" class="btn-primary" onclick="saveStudent()">
-            Add Student | إضافة طالب
+            Add Student
           </button>
 
-          <button class="btn-gray" onclick="resetForm()">
-            Reset | إعادة ضبط
-          </button>
+          <button class="btn-gray" onclick="resetForm()">Reset</button>
         </div>
       </div>
 
@@ -75,9 +69,9 @@
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Class | الفصل</th>
-                <th>Student | الطالب</th>
-                <th>Action | الإجراءات</th>
+                <th>Class</th>
+                <th>Student</th>
+                <th>Action</th>
               </tr>
             </thead>
 
@@ -90,7 +84,7 @@
       </div>
     </div>
 
-    <script src="/js/common/common.js"></script>
+    <!-- <script src="/js/common/common.js"></script> -->
     <script src="/js/common/authGuard.js"></script>
     <script type="module" src="/js/admin/admin_student.js"></script>
   </body>
