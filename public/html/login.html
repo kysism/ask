@@ -126,9 +126,6 @@
     <script>
       const API = "https://fcm-61ns.onrender.com/api";
 
-      // =========================
-      // STEP 1: GENERATE PASSWORD
-      // =========================
       async function generatePassword() {
         const res = await fetch(`${API}/auth/generate`, {
           method: "POST",
@@ -148,9 +145,6 @@
           "Access token sent to admin devices (FCM).";
       }
 
-      // =========================
-      // STEP 2: VERIFY LOGIN
-      // =========================
       async function login() {
         const password = document.getElementById("password").value;
 
@@ -175,11 +169,8 @@
           return;
         }
 
-        // =========================
-        // IMPORTANT CHANGE HERE
-        // =========================
-        // store SESSION TOKEN (not password)
-        localStorage.setItem("admin_token", json.token);
+        // 인증 성공
+        localStorage.setItem("admin_token", password);
 
         location.href = "/html/index.html";
       }
