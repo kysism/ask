@@ -16,17 +16,16 @@
         font-size: 13px;
       }
 
-      .result-table th,
-      .result-table td {
+      .result-table th {
+        background: #f3f4f6;
         padding: 10px;
-        border-bottom: 1px solid #e5e7eb;
-        text-align: center;
+        border-bottom: 2px solid #e5e7eb;
         white-space: nowrap;
       }
 
-      .result-table th {
-        background: #f3f4f6;
-        font-weight: 600;
+      .result-table td {
+        padding: 10px;
+        border-bottom: 1px solid #e5e7eb;
       }
 
       .text-group {
@@ -54,7 +53,8 @@
         font-size: 12px;
       }
 
-      .chart-wrap {
+      /* 차트 영역 */
+      .chart-box {
         height: 400px;
       }
     </style>
@@ -75,18 +75,15 @@
         </div>
       </div>
 
-      <!-- CHART -->
-      <div class="card chart-wrap">
+      <div class="card chart-box">
         <canvas id="chart"></canvas>
       </div>
 
-      <!-- SCORE -->
       <div class="card">
         <h3>Score Summary</h3>
         <div id="scoreTable"></div>
       </div>
 
-      <!-- TEXT -->
       <div class="card">
         <h3>Open Answers</h3>
         <div id="textBox"></div>
