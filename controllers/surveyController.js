@@ -1,58 +1,56 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY,
-);
+const supabase = require("../services/supabaseService");
 
 // =========================
 // SURVEY TITLE
 // =========================
 exports.getTitle = async (req, res) => {
-  const { survey_id } = req.query;
+  try {
+    const { survey_id } = req.query;
 
-  const { data, error } = await supabase
-    .from("tbl_survey")
-    .select("*")
-    .eq("survey_id", survey_id)
-    .single();
+    const { data, error } = await supabase
+      .from("tbl_survey")
+      .select("*")
+      .eq("survey_id", survey_id);
 
-  if (error) {
-    return res.status(500).json({
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: data?.[0] || null,
+    });
+  } catch (err) {
+    res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
     });
   }
-
-  res.json({
-    success: true,
-    data,
-  });
 };
 
 // =========================
 // SURVEY ITEMS
 // =========================
 exports.getItems = async (req, res) => {
-  const { survey_id } = req.query;
+  try {
+    const { survey_id } = req.query;
 
-  const { data, error } = await supabase
-    .from("tbl_survey_item")
-    .select("*")
-    .eq("survey_id", survey_id)
-    .order("survey_item_id", { ascending: true });
+    const { data, error } = await supabase
+      .from("tbl_survey_item")
+      .select("*")
+      .eq("survey_id", survey_id)
+      .order("survey_item_id", { ascending: true });
 
-  if (error) {
-    return res.status(500).json({
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (err) {
+    res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
     });
   }
-
-  res.json({
-    success: true,
-    data,
-  });
 };
 
 // =========================
