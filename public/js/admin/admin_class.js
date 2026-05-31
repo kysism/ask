@@ -163,7 +163,10 @@ function editClass(id, name, org_id) {
   if (nameEl) nameEl.value = name || "";
   if (orgEl) orgEl.value = org_id || "";
 
-  if (btn) btn.innerText = "Update Class";
+  if (btn) {
+    btn.innerText = "Update Class";
+    btn.classList.remove("btn-primary");
+  }
 }
 
 // =========================
@@ -204,6 +207,8 @@ function resetForm() {
   if (btn) {
     btn.innerText = "Add Class";
   }
+  btn.classList.remove("btn-success");
+  btn.classList.add("btn-primary");
 }
 
 // =========================

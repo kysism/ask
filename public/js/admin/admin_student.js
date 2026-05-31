@@ -140,7 +140,7 @@ function editStudent(id, name, class_id) {
   document.getElementById("class_id").value = class_id;
 
   const btn = document.getElementById("saveBtn");
-  btn.innerText = "Update Student | تعديل الطالب";
+  btn.innerText = "Update Student";
   btn.classList.remove("btn-primary");
   btn.classList.add("btn-success");
 }

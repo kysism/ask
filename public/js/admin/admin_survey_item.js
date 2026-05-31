@@ -183,6 +183,7 @@ function resetForm() {
   const btn = document.getElementById("saveBtn");
   btn.innerText = "Add Item";
   btn.classList.remove("btn-success");
+  btn.classList.add("btn-primary");
 }
 
 /* =========================

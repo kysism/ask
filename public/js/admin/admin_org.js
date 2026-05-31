@@ -156,7 +156,7 @@ function editOrg(id, name, place) {
   document.getElementById("org_place").value = place || "";
 
   const btn = document.getElementById("saveBtn");
-
+  btn.classList.remove("btn-primary");
   btn.innerText = "Update Organization";
 }
 
@@ -200,6 +200,8 @@ function resetForm() {
   document.getElementById("org_place").value = "";
 
   const btn = document.getElementById("saveBtn");
+  btn.classList.remove("btn-success");
+  btn.classList.add("btn-primary");
 
   btn.innerText = "Add Organization";
 }
