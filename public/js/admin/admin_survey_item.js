@@ -13,7 +13,7 @@ function el(id) {
 /* =========================
    LOAD SURVEY LIST
 ========================= */
-async function loadSurvey(callback) {
+async function loadSurvey() {
   try {
     const res = await fetch(SURVEY_API);
     const result = await res.json();
@@ -30,8 +30,6 @@ async function loadSurvey(callback) {
             `<option value="${String(s.survey_id)}">${s.survey_title}</option>`,
         )
         .join("");
-
-    if (callback) callback();
   } catch (err) {
     console.error(err);
   }
@@ -53,6 +51,14 @@ async function loadItem() {
 
   let html = "";
 
+  if (!data.length) {
+    html = `
+      <tr>
+        <td colspan="6" style="text-align:center;">No Data</td>
+      </tr>
+    `;
+  }
+
   data.forEach((r) => {
     html += `
       <tr>
@@ -65,7 +71,6 @@ async function loadItem() {
           <button class="btn-warning edit-btn" data-id="${r.survey_item_id}">
             Edit
           </button>
-
           <button class="btn-danger delete-btn" data-id="${r.survey_item_id}">
             Delete
           </button>
@@ -78,7 +83,7 @@ async function loadItem() {
 }
 
 /* =========================
-   CLICK EVENTS
+   CLICK EVENTS (EDIT / DELETE)
 ========================= */
 document.addEventListener("click", async (e) => {
   const id = e.target.dataset.id;
@@ -87,13 +92,19 @@ document.addEventListener("click", async (e) => {
   if (e.target.classList.contains("delete-btn")) {
     if (!id) return;
 
-    await fetch(`${API}/${id}`, {
+    const res = await fetch(`${API}/${id}`, {
       method: "DELETE",
     });
 
-    alert("Deleted");
+    const result = await res.json();
 
-    if (String(editItemId) === String(id)) resetForm();
+    if (result.success) {
+      alert("Deleted");
+    }
+
+    if (String(editItemId) === String(id)) {
+      resetForm();
+    }
 
     loadItem();
   }
@@ -107,7 +118,7 @@ document.addEventListener("click", async (e) => {
       survey_item: row.children[2].innerText,
       survey_item_type: row.children[3].innerText,
       survey_item_mandatory: row.children[4].innerText === "Y",
-      survey_id: el("survey_id").value,
+      survey_id: document.getElementById("survey_id").value,
     };
 
     editItem(
@@ -121,7 +132,7 @@ document.addEventListener("click", async (e) => {
 });
 
 /* =========================
-   SAVE ITEM
+   SAVE (CREATE / UPDATE)
 ========================= */
 async function saveItem() {
   const survey_id = el("survey_id").value;
@@ -139,9 +150,7 @@ async function saveItem() {
   if (editItemId) {
     res = await fetch(`${API}/${editItemId}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         survey_id,
         survey_item,
@@ -149,12 +158,19 @@ async function saveItem() {
         survey_item_mandatory,
       }),
     });
+
+    const result = await res.json();
+
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+
+    alert("Updated");
   } else {
     res = await fetch(API, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         survey_id,
         survey_item,
@@ -162,23 +178,23 @@ async function saveItem() {
         survey_item_mandatory,
       }),
     });
+
+    const result = await res.json();
+
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+
+    alert("Saved");
   }
-
-  const result = await res.json();
-
-  if (!result.success) {
-    alert(result.message);
-    return;
-  }
-
-  alert("Saved");
 
   resetForm();
   loadItem();
 }
 
 /* =========================
-   EDIT ITEM
+   EDIT (FIX SELECT ISSUE)
 ========================= */
 function editItem(id, item, survey_id, type, mandatory) {
   editItemId = id;
@@ -187,19 +203,23 @@ function editItem(id, item, survey_id, type, mandatory) {
   el("survey_item_type").value = type;
   el("survey_item_mandatory").value = String(mandatory);
 
-  // FIX: select must match string value
-  el("survey_id").value = String(survey_id);
+  const select = el("survey_id");
+
+  // 🔥 핵심: 옵션 로딩 이후 값 강제 반영
+  setTimeout(() => {
+    select.value = String(survey_id);
+    select.dispatchEvent(new Event("change"));
+  }, 0);
 
   const btn = el("saveBtn");
   btn.innerText = "Update Item";
-  btn.classList.remove("btn-primary");
   btn.classList.add("btn-success");
 
   window.scrollTo({ top: 0 });
 }
 
 /* =========================
-   RESET FORM
+   RESET
 ========================= */
 function resetForm() {
   editItemId = null;
@@ -210,25 +230,19 @@ function resetForm() {
 
   const btn = el("saveBtn");
   btn.innerText = "Add Item";
-
   btn.classList.remove("btn-success");
   btn.classList.add("btn-primary");
 }
 
 /* =========================
-   EVENTS
-========================= */
-el("survey_id").addEventListener("change", loadItem);
-
-/* =========================
    INIT
 ========================= */
+document.getElementById("survey_id").addEventListener("change", loadItem);
+
 loadSurvey();
 loadItem();
 
-/* =========================
-   EXPORT
-========================= */
+/* EXPORT */
 window.saveItem = saveItem;
 window.editItem = editItem;
 window.resetForm = resetForm;
