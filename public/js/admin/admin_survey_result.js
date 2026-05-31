@@ -2,96 +2,94 @@ const API = "/api/survey-result";
 
 const survey_id = new URLSearchParams(location.search).get("survey_id");
 
+let chartInstance = null;
+
 /* =========================
-   MAIN LOAD
+   LOAD
 ========================= */
 async function load() {
   try {
-    if (!survey_id) {
-      document.getElementById("scoreTable").innerHTML = "No survey_id found";
-      return;
-    }
-
     const res = await fetch(`${API}?survey_id=${survey_id}`);
 
-    if (!res.ok) {
-      throw new Error("API ERROR");
-    }
-
     const result = await res.json();
+
     const data = result.data || [];
 
-    let scoreMap = {};
-    let textMap = {};
+    const scoreMap = {};
+    const textMap = {};
 
-    /* =========================
-       DATA GROUPING
-    ========================= */
     data.forEach((r) => {
       const item = r.tbl_survey_item;
 
       if (!item) return;
 
+      const title = item.survey_item;
+
       if (item.survey_item_type === "S") {
-        scoreMap[item.survey_item] =
-          (scoreMap[item.survey_item] || 0) + Number(r.survey_item_answer || 0);
-      } else {
-        if (!textMap[item.survey_item]) {
-          textMap[item.survey_item] = [];
+        if (!scoreMap[title]) {
+          scoreMap[title] = {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+          };
         }
 
-        textMap[item.survey_item].push(r.survey_item_answer);
+        const score = Number(r.survey_item_answer);
+
+        if (score >= 1 && score <= 5) {
+          scoreMap[title][score]++;
+        }
+      } else {
+        if (!textMap[title]) {
+          textMap[title] = [];
+        }
+
+        textMap[title].push(r.survey_item_answer || "");
       }
     });
 
-    /* =========================
-       RENDER UI
-    ========================= */
     renderChart(scoreMap);
     renderTable(scoreMap);
     renderText(textMap);
   } catch (err) {
-    console.error("LOAD ERROR:", err);
-
-    document.getElementById("scoreTable").innerHTML =
-      "<div style='color:red'>Failed to load data</div>";
-
-    document.getElementById("textBox").innerHTML = "";
+    console.error(err);
   }
 }
 
 /* =========================
-   CHART (SAFE VERSION)
+   CHART
 ========================= */
 function renderChart(scoreMap) {
   const canvas = document.getElementById("chart");
 
-  if (!canvas) return;
-
   const ctx = canvas.getContext("2d");
 
-  if (!ctx) return;
+  const labels = Object.keys(scoreMap);
 
-  new Chart(ctx, {
+  const datasets = [1, 2, 3, 4, 5].map((score) => ({
+    label:
+      score +
+      " - " +
+      ["", "Very Bad", "Bad", "Normal", "Good", "Very Good"][score],
+
+    data: labels.map((q) => scoreMap[q][score]),
+  }));
+
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
     type: "bar",
     data: {
-      labels: Object.keys(scoreMap),
-      datasets: [
-        {
-          label: "Score",
-          data: Object.values(scoreMap),
-          backgroundColor: "#2563eb",
-        },
-      ],
+      labels,
+      datasets,
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-        },
-      },
       scales: {
         y: {
           beginAtZero: true,
@@ -102,27 +100,43 @@ function renderChart(scoreMap) {
 }
 
 /* =========================
-   SCORE TABLE
+   TABLE
 ========================= */
 function renderTable(scoreMap) {
   let html = `
     <table class="result-table">
+
       <thead>
         <tr>
           <th>Question</th>
-          <th>Total Score</th>
+          <th>1 Very Bad</th>
+          <th>2 Bad</th>
+          <th>3 Normal</th>
+          <th>4 Good</th>
+          <th>5 Very Good</th>
+          <th>Total</th>
         </tr>
       </thead>
+
       <tbody>
   `;
 
-  Object.entries(scoreMap).forEach(([k, v]) => {
+  Object.entries(scoreMap).forEach(([question, score]) => {
+    const total = score[1] + score[2] + score[3] + score[4] + score[5];
+
     html += `
-      <tr>
-        <td>${k}</td>
-        <td>${v}</td>
-      </tr>
-    `;
+        <tr>
+          <td>${question}</td>
+
+          <td>${score[1]}</td>
+          <td>${score[2]}</td>
+          <td>${score[3]}</td>
+          <td>${score[4]}</td>
+          <td>${score[5]}</td>
+
+          <td>${total}</td>
+        </tr>
+      `;
   });
 
   html += `
@@ -139,32 +153,39 @@ function renderTable(scoreMap) {
 function renderText(textMap) {
   let html = "";
 
-  Object.entries(textMap).forEach(([k, arr]) => {
+  Object.entries(textMap).forEach(([question, answers]) => {
     html += `
-      <div class="text-group">
-        <h4>${k}</h4>
-        <div class="answer-list">
-    `;
+        <div class="text-group">
 
-    arr.forEach((v, idx) => {
-      html += `
-        <div class="answer-item">
-          <div class="answer-number">${idx + 1}</div>
-          <div class="answer-text">${v}</div>
-        </div>
+          <h4>${question}</h4>
+
+          <div class="answer-list">
       `;
+
+    answers.forEach((answer, idx) => {
+      html += `
+          <div class="answer-item">
+
+            <div class="answer-number">
+              ${idx + 1}
+            </div>
+
+            <div class="answer-text">
+              ${answer}
+            </div>
+
+          </div>
+        `;
     });
 
     html += `
+          </div>
+
         </div>
-      </div>
-    `;
+      `;
   });
 
   document.getElementById("textBox").innerHTML = html;
 }
 
-/* =========================
-   INIT
-========================= */
 load();
