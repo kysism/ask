@@ -31,7 +31,7 @@ async function getIp() {
 async function loadTitle() {
   if (!survey_id) return;
 
-  const res = await fetch(`${API}/title?survey_id=${survey_id}`);
+  const res = await fetch(`${API}-title?survey_id=${survey_id}`);
   const result = await res.json();
 
   if (result?.data && el("surveyTitle")) {
@@ -46,7 +46,7 @@ async function loadQuestions() {
   const box = el("surveyBox");
   if (!box) return;
 
-  const res = await fetch(`${API}/items?survey_id=${survey_id}`);
+  const res = await fetch(`${API}-item?survey_id=${survey_id}`);
   const result = await res.json();
 
   questions = result.data || [];
