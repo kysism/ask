@@ -18,10 +18,14 @@ const SCORE_STYLE = {
 let rawData = [];
 
 /* =========================
-   RESPONSE KEY 생성 (추가 핵심)
+   RESPONSE KEY (FIXED)
+   - tbl_result.id 사용 금지
+   - 응답자 기준으로 묶기
 ========================= */
 function makeResponseKey(r) {
-  return r.student_id || r.ip_address || "guest";
+  if (r.student_id) return `student-${r.student_id}`;
+  if (r.ip_address) return `guest-${r.ip_address}`;
+  return `guest-unknown-${r.id}`;
 }
 
 /* =========================
@@ -99,7 +103,7 @@ async function load() {
 }
 
 /* =========================
-   RESPONDENT SELECT (FIXED)
+   RESPONDENT SELECT
 ========================= */
 function buildRespondentSelect(data) {
   const map = {};
@@ -112,7 +116,7 @@ function buildRespondentSelect(data) {
         key,
         label: r.student_id
           ? `Student ${r.student_id}`
-          : `Guest ${r.ip_address}`,
+          : `Guest ${r.ip_address || "unknown"}`,
       };
     }
   });
@@ -135,7 +139,7 @@ function buildRespondentSelect(data) {
 }
 
 /* =========================
-   MODAL OPEN (FILTER BASED)
+   MODAL OPEN
 ========================= */
 function openRespondentModal(key) {
   const modal = document.getElementById("modal");
