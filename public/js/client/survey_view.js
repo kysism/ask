@@ -237,14 +237,16 @@ window.submitSurvey = async function () {
   const payload = {
     survey_id,
     guest_uuid,
-    org_id,
-    class_id,
+    org_id: org_id || null,
+    class_id: class_id || null,
 
     answers: Object.keys(answers).map((id) => ({
       survey_item_id: Number(id),
       survey_item_answer: answers[id],
     })),
   };
+
+  console.log("SUBMIT PAYLOAD:", payload); // 🔥 꼭 확인
 
   try {
     const res = await fetch(`${API}/submit`, {
@@ -257,6 +259,8 @@ window.submitSurvey = async function () {
 
     const result = await res.json();
 
+    console.log("SERVER RESULT:", result); // 🔥 추가
+
     if (!result.success) {
       alert("Save failed");
       return;
@@ -264,14 +268,8 @@ window.submitSurvey = async function () {
 
     el("surveyBox").innerHTML = `
       <div class="thank-you">
-
         <h2>Thank You</h2>
-
-        <p>
-          Thank you for answering the survey
-          and giving your valuable time.
-        </p>
-
+        <p>Thank you for answering the survey and giving your valuable time.</p>
       </div>
     `;
 
