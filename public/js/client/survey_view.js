@@ -224,59 +224,89 @@ window.setAnswer = function (id, value) {
 /* =========================
    SUBMIT
 ========================= */
-window.submitSurvey = async function () {
-  for (const q of questions) {
-    if (q.survey_item_mandatory && !answers[q.survey_item_id]) {
-      alert("Please complete required fields");
-      return;
-    }
-  }
-
-  const guest_uuid = getGuestId();
-
-  const payload = {
-    survey_id,
-    guest_uuid,
-    org_id: org_id || null,
-    class_id: class_id || null,
-
-    answers: Object.keys(answers).map((id) => ({
-      survey_item_id: Number(id),
-      survey_item_answer: answers[id],
-    })),
-  };
-
-  console.log("SUBMIT PAYLOAD:", payload); // 🔥 꼭 확인
-
+exports.submitSurvey = async (req, res) => {
   try {
-    const res = await fetch(`${API}/submit`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const { survey_id, guest_uuid, org_id, class_id, answers } = req.body;
 
-    const result = await res.json();
-
-    console.log("SERVER RESULT:", result); // 🔥 추가
-
-    if (!result.success) {
-      alert("Save failed");
-      return;
+    // =========================
+    // VALIDATION
+    // =========================
+    if (!survey_id || !answers || typeof answers !== "object") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request body",
+      });
     }
 
-    el("surveyBox").innerHTML = `
-      <div class="thank-you">
-        <h2>Thank You</h2>
-        <p>Thank you for answering the survey and giving your valuable time.</p>
-      </div>
-    `;
+    const ip = getClientIp(req);
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // =========================
+    // DUPLICATE CHECK
+    // =========================
+    const { data: existing, error: dupErr } = await supabase
+      .from("tbl_result")
+      .select("id")
+      .eq("survey_id", survey_id)
+      .eq("ip_address", ip)
+      .limit(1);
+
+    if (dupErr) {
+      console.error("DUP CHECK ERROR:", dupErr);
+      throw dupErr;
+    }
+
+    if (existing?.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "Already submitted",
+      });
+    }
+
+    // =========================
+    // FIX: answers OBJECT 대응
+    // =========================
+    const payload = Object.entries(answers).map(([item_id, value]) => ({
+      survey_id,
+      survey_item_id: Number(item_id),
+      survey_item_answer: value,
+      ip_address: ip,
+
+      // optional meta
+      org_id: org_id || null,
+      class_id: class_id || null,
+      guest_uuid: guest_uuid || null,
+    }));
+
+    console.log("INSERT PAYLOAD:", payload);
+
+    // =========================
+    // INSERT
+    // =========================
+    const { data, error } = await supabase
+      .from("tbl_result")
+      .insert(payload)
+      .select();
+
+    if (error) {
+      console.error("SUPABASE INSERT ERROR:", error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+        details: error,
+      });
+    }
+
+    return res.json({
+      success: true,
+      data,
+    });
   } catch (err) {
-    console.error(err);
-    alert("Save failed");
+    console.error("submitSurvey error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
