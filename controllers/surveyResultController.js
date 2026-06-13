@@ -5,6 +5,9 @@ const supabase = require("../services/supabaseService");
 ========================= */
 exports.getResultBySurvey = async (req, res) => {
   try {
+    console.log({ req });
+    console.log(req.query);
+
     const { survey_id, org_id, class_id } = req.query;
 
     let query = supabase.from("tbl_result").select(`
