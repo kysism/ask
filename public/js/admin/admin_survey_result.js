@@ -13,9 +13,21 @@ const SCORE_STYLE = {
 };
 
 /* =========================
-   RAW DATA (추가)
+   RAW DATA
 ========================= */
 let rawData = [];
+
+/* =========================
+   RESPONSE KEY 생성 (추가 핵심)
+========================= */
+function makeResponseKey(r) {
+  const userKey = r.student_id || r.ip_address || "unknown";
+
+  const time = new Date(r.created_at);
+  time.setSeconds(Math.floor(time.getSeconds() / 10)); // 10초 단위 묶기
+
+  return `${userKey}_${time.toISOString().slice(0, 19)}`;
+}
 
 /* =========================
    LOAD
@@ -31,14 +43,8 @@ async function load() {
     const result = await res.json();
     const data = result.data || [];
 
-    /* =========================
-       RAW 저장 (추가)
-    ========================= */
     rawData = data;
 
-    /* =========================
-       RESPONDENT SELECT 생성 (추가)
-    ========================= */
     buildRespondentSelect(data);
 
     const scoreMap = {};
@@ -64,13 +70,7 @@ async function load() {
         scoreMap[qName] = (scoreMap[qName] || 0) + val;
 
         if (!scoreDetail[qName]) {
-          scoreDetail[qName] = {
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0,
-            5: 0,
-          };
+          scoreDetail[qName] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         }
 
         if (val >= 1 && val <= 5) {
@@ -104,37 +104,31 @@ async function load() {
 }
 
 /* =========================
-   RESPONDENT SELECT (추가)
+   RESPONDENT SELECT (FIXED)
 ========================= */
 function buildRespondentSelect(data) {
   const map = {};
 
   data.forEach((r) => {
-    const id = r.survey_submit_id;
+    const key = makeResponseKey(r);
 
-    if (!map[id]) {
-      map[id] = {
-        id,
-        label: `Respondent ${id}`,
+    if (!map[key]) {
+      map[key] = {
+        key,
+        label: r.student_id
+          ? `Student ${r.student_id}`
+          : `Guest ${r.ip_address}`,
       };
     }
   });
 
-  let select = document.getElementById("respondentSelect");
-
-  if (!select) {
-    /* 없으면 자동 생성 */
-    const topBar = document.querySelector(".card");
-    select = document.createElement("select");
-    select.id = "respondentSelect";
-    select.style.marginTop = "10px";
-    topBar.appendChild(select);
-  }
+  const select = document.getElementById("respondentSelect");
+  if (!select) return;
 
   select.innerHTML = `
     <option value="">Select Respondent</option>
     ${Object.values(map)
-      .map((u) => `<option value="${u.id}">${u.label}</option>`)
+      .map((u) => `<option value="${u.key}">${u.label}</option>`)
       .join("")}
   `;
 
@@ -146,22 +140,23 @@ function buildRespondentSelect(data) {
 }
 
 /* =========================
-   MODAL OPEN (추가)
+   MODAL OPEN (FILTER BASED)
 ========================= */
-function openRespondentModal(id) {
+function openRespondentModal(key) {
   const modal = document.getElementById("modal");
   const frame = document.getElementById("modalFrame");
 
-  frame.src =
-    `/admin/survey_response_view.html` +
-    `?survey_id=${survey_id}` +
-    `&survey_submit_id=${id}`;
+  const filtered = rawData.filter((r) => makeResponseKey(r) === key);
+
+  const encoded = encodeURIComponent(JSON.stringify(filtered));
+
+  frame.src = `/admin/survey_response_view.html` + `?data=${encoded}`;
 
   modal.style.display = "flex";
 }
 
 /* =========================
-   MODAL CLOSE (추가)
+   MODAL CLOSE
 ========================= */
 function closeModal() {
   const modal = document.getElementById("modal");
@@ -210,19 +205,11 @@ function renderChart(scoreDetail, questionMap) {
 
   new Chart(ctx, {
     type: "bar",
-    data: {
-      labels,
-      datasets,
-    },
+    data: { labels, datasets },
     options: {
       responsive: true,
       scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            stepSize: 1,
-          },
-        },
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
       },
     },
   });
@@ -269,10 +256,7 @@ function renderScoreTable(scoreDetail, questionMap) {
     `;
   });
 
-  html += `
-      </tbody>
-    </table>
-  `;
+  html += `</tbody></table>`;
 
   el("scoreTable").innerHTML = html;
 }
@@ -284,10 +268,7 @@ function renderText(textMap) {
   let html = "";
 
   Object.entries(textMap).forEach(([q, arr]) => {
-    html += `
-      <div class="text-group">
-        <h4>${q}</h4>
-    `;
+    html += `<div class="text-group"><h4>${q}</h4>`;
 
     arr.forEach((v, i) => {
       html += `
