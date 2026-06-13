@@ -135,7 +135,16 @@ exports.checkDuplicate = async (req, res) => {
 // =========================
 exports.submitSurvey = async (req, res) => {
   try {
-    const { survey_id, answers, org_id, class_id } = req.body;
+    const {
+      survey_id,
+      answers,
+      org_id: bodyOrg,
+      class_id: bodyClass,
+    } = req.body;
+
+    // ⭐ URL query에서도 fallback 받기
+    const org_id = bodyOrg || req.query.org_id || null;
+    const class_id = bodyClass || req.query.class_id || null;
 
     if (!survey_id || !answers || typeof answers !== "object") {
       return res.status(400).json({
@@ -146,7 +155,6 @@ exports.submitSurvey = async (req, res) => {
 
     const ip = getClientIp(req);
 
-    // duplicate check
     const { data: existing, error: dupErr } = await supabase
       .from("tbl_result")
       .select("id")
@@ -154,10 +162,7 @@ exports.submitSurvey = async (req, res) => {
       .eq("ip_address", ip)
       .limit(1);
 
-    if (dupErr) {
-      console.error("duplicate check error:", dupErr);
-      throw dupErr;
-    }
+    if (dupErr) throw dupErr;
 
     if (existing && existing.length > 0) {
       return res.status(409).json({
@@ -166,24 +171,20 @@ exports.submitSurvey = async (req, res) => {
       });
     }
 
-    // payload (⭐ org_id / class_id 추가)
     const payload = Object.entries(answers).map(([item_id, value]) => ({
       survey_id,
       survey_item_id: Number(item_id),
       survey_item_answer: value,
       ip_address: ip,
-      org_id: org_id || null,
-      class_id: class_id || null,
+      org_id,
+      class_id,
     }));
 
-    console.log("INSERT PAYLOAD:", payload);
+    console.log("FINAL INSERT PAYLOAD:", payload);
 
     const { error } = await supabase.from("tbl_result").insert(payload);
 
-    if (error) {
-      console.error("INSERT ERROR:", error);
-      throw error;
-    }
+    if (error) throw error;
 
     return res.json({
       success: true,
