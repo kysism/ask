@@ -32,7 +32,9 @@ async function load() {
       `;
     });
 
-    document.getElementById("box").innerHTML = html;
+    console.log(html);
+
+    document.getElementById("contents").innerHTML = html;
   } catch (err) {
     console.error(err);
     document.getElementById("box").innerHTML =
