@@ -5,7 +5,7 @@ const supabase = require("../services/supabaseService");
 ========================= */
 exports.getResultBySurvey = async (req, res) => {
   try {
-    const { survey_id, org, class: classParam } = req.query;
+    const { survey_id, org_id, class_id } = req.query;
 
     let query = supabase.from("tbl_result").select(`
         survey_item_answer,
@@ -25,12 +25,12 @@ exports.getResultBySurvey = async (req, res) => {
     }
 
     // OPTIONAL FILTERS
-    if (org) {
-      query = query.eq("org_id", org);
+    if (org_id) {
+      query = query.eq("org_id", org_id);
     }
 
-    if (classParam) {
-      query = query.eq("class_id", classParam);
+    if (class_id) {
+      query = query.eq("class_id", class_id);
     }
 
     const { data, error } = await query;
