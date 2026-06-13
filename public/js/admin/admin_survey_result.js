@@ -143,7 +143,7 @@ function openRespondentModal(key) {
 
   const filtered = rawData.filter((r) => makeResponseKey(r) === key);
 
-  frame.src = `/admin/admin_survey_response.html?key=${encodeURIComponent(key)}&survey_id=${survey_id}`;
+  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(key)}&survey_id=${survey_id}`;
 
   modal.style.display = "flex";
 }
