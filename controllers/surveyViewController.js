@@ -135,7 +135,7 @@ exports.checkDuplicate = async (req, res) => {
 // =========================
 exports.submitSurvey = async (req, res) => {
   try {
-    const { survey_id, answers } = req.body;
+    const { survey_id, answers, org_id, class_id } = req.body;
 
     if (!survey_id || !answers || typeof answers !== "object") {
       return res.status(400).json({
@@ -146,15 +146,18 @@ exports.submitSurvey = async (req, res) => {
 
     const ip = getClientIp(req);
 
-    // =========================
-    // DUPLICATE CHECK (SERVER SIDE SAFETY)
-    // =========================
-    const { data: existing } = await supabase
+    // duplicate check
+    const { data: existing, error: dupErr } = await supabase
       .from("tbl_result")
       .select("id")
       .eq("survey_id", survey_id)
       .eq("ip_address", ip)
       .limit(1);
+
+    if (dupErr) {
+      console.error("duplicate check error:", dupErr);
+      throw dupErr;
+    }
 
     if (existing && existing.length > 0) {
       return res.status(409).json({
@@ -163,29 +166,24 @@ exports.submitSurvey = async (req, res) => {
       });
     }
 
-    // =========================
-    // BUILD PAYLOAD
-    // =========================
+    // payload (⭐ org_id / class_id 추가)
     const payload = Object.entries(answers).map(([item_id, value]) => ({
       survey_id,
       survey_item_id: Number(item_id),
       survey_item_answer: value,
       ip_address: ip,
+      org_id: org_id || null,
+      class_id: class_id || null,
     }));
 
-    if (payload.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No answers provided",
-      });
-    }
+    console.log("INSERT PAYLOAD:", payload);
 
-    // =========================
-    // INSERT
-    // =========================
     const { error } = await supabase.from("tbl_result").insert(payload);
 
-    if (error) throw error;
+    if (error) {
+      console.error("INSERT ERROR:", error);
+      throw error;
+    }
 
     return res.json({
       success: true,

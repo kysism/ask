@@ -26,7 +26,7 @@ async function loadSurvey() {
 }
 
 /* =========================
-   LOAD META (ORG / CLASS )
+   LOAD META (ORG / CLASS)
 ========================= */
 async function loadMeta() {
   const [orgRes, classRes] = await Promise.all([
@@ -49,44 +49,42 @@ async function loadMeta() {
       .map((c) => `<option value="${c.class_id}">${c.class_nm}</option>`)
       .join("");
 
-  // 🔥 추가: 선택 변경 시 링크 즉시 갱신
   document.getElementById("orgSelect").onchange = updateLinks;
   document.getElementById("classSelect").onchange = updateLinks;
 }
 
 /* =========================
-   BUILD LINK
+   BUILD SURVEY LINK
 ========================= */
 function buildSurveyLink(id) {
-  const org = document.getElementById("orgSelect").value;
-  const cls = document.getElementById("classSelect").value;
+  const org_id = document.getElementById("orgSelect").value;
+  const class_id = document.getElementById("classSelect").value;
 
   let url = `${location.origin}/html/client/survey_view.html?survey_id=${id}`;
 
-  if (org) url += `&org=${org}`;
-  if (cls) url += `&class=${cls}`;
+  if (org_id) url += `&org_id=${org_id}`;
+  if (class_id) url += `&class_id=${class_id}`;
 
   return url;
 }
 
 /* =========================
-   BUILD RESULT LINK (FIX)
-   → org/class 포함하도록 수정
+   BUILD RESULT LINK
 ========================= */
 function buildResultLink(id) {
   const org_id = document.getElementById("orgSelect").value;
-  const cls_id = document.getElementById("classSelect").value;
+  const class_id = document.getElementById("classSelect").value;
 
   let url = `${location.origin}/html/admin/admin_survey_result.html?survey_id=${id}`;
 
   if (org_id) url += `&org_id=${org_id}`;
-  if (cls_id) url += `&class_id=${cls_id}`;
+  if (class_id) url += `&class_id=${class_id}`;
 
   return url;
 }
 
 /* =========================
-   UPDATE LINKS (핵심 추가)
+   UPDATE LINKS
 ========================= */
 function updateLinks() {
   if (!currentSurveyId) return;
@@ -138,7 +136,6 @@ window.selectSurvey = async function (id, title, el) {
 
   document.getElementById("questionList").innerHTML = html;
 
-  // 🔥 여기서도 항상 최신 링크 생성
   updateLinks();
 };
 
