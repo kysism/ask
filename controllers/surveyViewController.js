@@ -155,7 +155,7 @@ exports.submitSurvey = async (req, res) => {
 
     if (dupErr) throw dupErr;
 
-    if (existing && existing.length > 0) {
+    if (existing?.length > 0) {
       return res.status(409).json({
         success: false,
         message: "Already submitted",
@@ -164,22 +164,26 @@ exports.submitSurvey = async (req, res) => {
 
     const payload = answers.map((a) => ({
       survey_id,
-      survey_item_id: a.survey_item_id,
+      survey_item_id: Number(a.survey_item_id),
       survey_item_answer: a.survey_item_answer,
       ip_address: ip,
 
-      org_id: org_id || null,
-      class_id: class_id || null,
+      org_id: org_id ? Number(org_id) : null,
+      class_id: class_id ? Number(class_id) : null,
       guest_uuid: guest_uuid || null,
     }));
 
-    console.log("FINAL INSERT PAYLOAD:", payload);
+    console.log("FINAL INSERT PAYLOAD:", JSON.stringify(payload, null, 2));
 
     const { error } = await supabase.from("tbl_result").insert(payload);
 
     if (error) {
       console.error("INSERT ERROR:", error);
-      throw error;
+
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
 
     return res.json({
