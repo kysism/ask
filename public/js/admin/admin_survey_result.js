@@ -18,12 +18,12 @@ const SCORE_STYLE = {
 let rawData = [];
 
 /* =========================
-   RESPONSE KEY (UNIFIED)
+   RESPONSE KEY (SAFE + UNIFIED)
 ========================= */
 function makeResponseKey(r) {
   if (r.student_id) return `student-${r.student_id}`;
   if (r.guest_uuid) return `guest-${r.guest_uuid}`;
-  return "guest-unknown";
+  return null; // ❗ 중요: fallback 제거 (그룹 깨짐 방지)
 }
 
 /* =========================
@@ -64,8 +64,6 @@ async function load() {
       if (type === "S") {
         const val = Number(r.survey_item_answer || 0);
 
-        scoreMap[qName] = (scoreMap[qName] || 0) + val;
-
         if (!scoreDetail[qName]) {
           scoreDetail[qName] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         }
@@ -101,13 +99,15 @@ async function load() {
 }
 
 /* =========================
-   RESPONDENT SELECT
+   RESPONDENT SELECT (FIXED GROUPING)
 ========================= */
 function buildRespondentSelect(data) {
   const map = {};
 
   data.forEach((r) => {
     const key = makeResponseKey(r);
+
+    if (!key) return; // ❗ 핵심: null 제거
 
     if (!map[key]) {
       map[key] = {

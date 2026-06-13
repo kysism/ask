@@ -4,12 +4,12 @@ const survey_id = new URLSearchParams(location.search).get("survey_id");
 const key = new URLSearchParams(location.search).get("key");
 
 /* =========================
-   RESPONSE KEY (UNIFIED)
+   RESPONSE KEY (SAFE)
 ========================= */
 function makeResponseKey(r) {
   if (r.student_id) return `student-${r.student_id}`;
   if (r.guest_uuid) return `guest-${r.guest_uuid}`;
-  return "guest-unknown";
+  return null;
 }
 
 /* =========================
@@ -24,9 +24,10 @@ async function load() {
 
     const filtered = data.filter((r) => makeResponseKey(r) === key);
 
-    if (filtered.length === 0) {
-      document.getElementById("contents").innerHTML =
-        `<div class="question-card">No response found</div>`;
+    const box = document.getElementById("contents");
+
+    if (!filtered.length) {
+      box.innerHTML = `<div class="question-card">No response found</div>`;
       return;
     }
 
@@ -44,7 +45,7 @@ async function load() {
       `;
     });
 
-    document.getElementById("contents").innerHTML = html;
+    box.innerHTML = html;
   } catch (err) {
     console.error(err);
     document.getElementById("contents").innerHTML =
