@@ -9,7 +9,7 @@ const key = new URLSearchParams(location.search).get("key");
 function makeResponseKey(r) {
   if (r.student_id) return `student-${r.student_id}`;
   if (r.ip_address) return `guest-${r.ip_address}`;
-  return `guest-unknown`;
+  return `guest-${r.survey_id}`;
 }
 
 /* =========================
