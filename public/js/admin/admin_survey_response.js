@@ -4,12 +4,12 @@ const survey_id = new URLSearchParams(location.search).get("survey_id");
 const key = new URLSearchParams(location.search).get("key");
 
 /* =========================
-   RESPONSE KEY (MUST MATCH LIST PAGE)
+   RESPONSE KEY (UNIFIED)
 ========================= */
 function makeResponseKey(r) {
   if (r.student_id) return `student-${r.student_id}`;
-  if (r.ip_address) return `guest-${r.ip_address}`;
-  return `guest-${r.survey_id}`;
+  if (r.guest_uuid) return `guest-${r.guest_uuid}`;
+  return "guest-unknown";
 }
 
 /* =========================
@@ -22,16 +22,15 @@ async function load() {
 
     const data = result.data || [];
 
-    // ✔ KEY 기준 필터 (FIXED)
     const filtered = data.filter((r) => makeResponseKey(r) === key);
-
-    let html = "";
 
     if (filtered.length === 0) {
       document.getElementById("contents").innerHTML =
         `<div class="question-card">No response found</div>`;
       return;
     }
+
+    let html = "";
 
     filtered.forEach((r, idx) => {
       const q = r.tbl_survey_item?.survey_item || "Unknown Question";

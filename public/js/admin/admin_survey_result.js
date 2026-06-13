@@ -18,14 +18,12 @@ const SCORE_STYLE = {
 let rawData = [];
 
 /* =========================
-   RESPONSE KEY (FIXED)
-   - tbl_result.id 사용 금지
-   - 응답자 기준으로 묶기
+   RESPONSE KEY (UNIFIED)
 ========================= */
 function makeResponseKey(r) {
   if (r.student_id) return `student-${r.student_id}`;
-  if (r.ip_address) return `guest-${r.ip_address}`;
-  return `guest-${r.survey_id}`;
+  if (r.guest_uuid) return `guest-${r.guest_uuid}`;
+  return "guest-unknown";
 }
 
 /* =========================
@@ -116,7 +114,7 @@ function buildRespondentSelect(data) {
         key,
         label: r.student_id
           ? `Student ${r.student_id}`
-          : `Guest ${r.ip_address || "unknown"}`,
+          : `Guest ${r.guest_uuid?.slice(0, 8) || "unknown"}`,
       };
     }
   });
@@ -145,9 +143,9 @@ function openRespondentModal(key) {
   const modal = document.getElementById("modal");
   const frame = document.getElementById("modalFrame");
 
-  const filtered = rawData.filter((r) => makeResponseKey(r) === key);
-
-  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(key)}&survey_id=${survey_id}`;
+  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(
+    key,
+  )}&survey_id=${survey_id}`;
 
   modal.style.display = "flex";
 }
@@ -217,7 +215,7 @@ function renderChart(scoreDetail, questionMap) {
 ========================= */
 function renderScoreTable(scoreDetail, questionMap) {
   if (!Object.keys(scoreDetail).length) {
-    el("scoreCard").innerHTML = "";
+    el("scoreTable").innerHTML = "";
     return;
   }
 
