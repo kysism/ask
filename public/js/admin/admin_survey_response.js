@@ -4,6 +4,15 @@ const survey_id = new URLSearchParams(location.search).get("survey_id");
 const key = new URLSearchParams(location.search).get("key");
 
 /* =========================
+   RESPONSE KEY (MUST MATCH LIST PAGE)
+========================= */
+function makeResponseKey(r) {
+  if (r.student_id) return `student-${r.student_id}`;
+  if (r.ip_address) return `guest-${r.ip_address}`;
+  return `guest-unknown`;
+}
+
+/* =========================
    LOAD
 ========================= */
 async function load() {
@@ -13,16 +22,20 @@ async function load() {
 
     const data = result.data || [];
 
-    const filtered = data.filter((r) => {
-      const k = r.student_id || r.ip_address || "guest";
-      return k === key;
-    });
+    // ✔ KEY 기준 필터 (FIXED)
+    const filtered = data.filter((r) => makeResponseKey(r) === key);
 
     let html = "";
 
+    if (filtered.length === 0) {
+      document.getElementById("contents").innerHTML =
+        `<div class="question-card">No response found</div>`;
+      return;
+    }
+
     filtered.forEach((r, idx) => {
-      const q = r.tbl_survey_item?.survey_item;
-      const ans = r.survey_item_answer;
+      const q = r.tbl_survey_item?.survey_item || "Unknown Question";
+      const ans = r.survey_item_answer ?? "-";
 
       html += `
         <div class="question-card">
@@ -32,13 +45,11 @@ async function load() {
       `;
     });
 
-    console.log(html);
-
     document.getElementById("contents").innerHTML = html;
   } catch (err) {
     console.error(err);
-    document.getElementById("box").innerHTML =
-      "<div>Error loading response</div>";
+    document.getElementById("contents").innerHTML =
+      `<div class="question-card">Error loading response</div>`;
   }
 }
 

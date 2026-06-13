@@ -25,7 +25,7 @@ let rawData = [];
 function makeResponseKey(r) {
   if (r.student_id) return `student-${r.student_id}`;
   if (r.ip_address) return `guest-${r.ip_address}`;
-  return `guest-unknown-${r.id}`;
+  return `guest-${r.survey_id}`;
 }
 
 /* =========================
@@ -217,7 +217,7 @@ function renderChart(scoreDetail, questionMap) {
 ========================= */
 function renderScoreTable(scoreDetail, questionMap) {
   if (!Object.keys(scoreDetail).length) {
-    el("scoreTable").innerHTML = "";
+    el("scoreCard").innerHTML = "";
     return;
   }
 
