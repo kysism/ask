@@ -79,29 +79,49 @@ exports.checkDuplicate = async (req, res) => {
   });
 };
 
-// =========================
-// SUBMIT SURVEY
-// =========================
 exports.submitSurvey = async (req, res) => {
-  const payload = req.body;
+  try {
+    console.log("REQ BODY:", req.body);
 
-  if (!Array.isArray(payload) || payload.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid payload",
+    const { survey_id, guest_uuid, org_id, class_id, answers } = req.body;
+
+    if (!survey_id || !Array.isArray(answers)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payload",
+      });
+    }
+
+    const payload = answers.map((a) => ({
+      survey_id,
+      survey_item_id: a.survey_item_id,
+      survey_item_answer: a.survey_item_answer,
+
+      org_id: org_id || null,
+      class_id: class_id || null,
+      guest_uuid: guest_uuid || null,
+    }));
+
+    console.log("INSERT PAYLOAD:", payload);
+
+    const { error } = await supabase.from("tbl_result").insert(payload);
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    return res.json({
+      success: true,
     });
-  }
+  } catch (err) {
+    console.error(err);
 
-  const { error } = await supabase.from("tbl_result").insert(payload);
-
-  if (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: err.message,
     });
   }
-
-  res.json({
-    success: true,
-  });
 };
