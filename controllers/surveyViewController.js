@@ -137,10 +137,7 @@ exports.submitSurvey = async (req, res) => {
   try {
     const { survey_id, guest_uuid, org_id, class_id, answers } = req.body;
 
-    const org_id = bodyOrg || req.query.org_id || null;
-    const class_id = bodyClass || req.query.class_id || null;
-
-    if (!survey_id || !answers || typeof answers !== "object") {
+    if (!survey_id || !Array.isArray(answers)) {
       return res.status(400).json({
         success: false,
         message: "Invalid request body",
@@ -169,18 +166,21 @@ exports.submitSurvey = async (req, res) => {
       survey_id,
       survey_item_id: a.survey_item_id,
       survey_item_answer: a.survey_item_answer,
-      ip_address: getClientIp(req),
+      ip_address: ip,
 
-      org_id,
-      class_id,
-      guest_uuid,
+      org_id: org_id || null,
+      class_id: class_id || null,
+      guest_uuid: guest_uuid || null,
     }));
 
     console.log("FINAL INSERT PAYLOAD:", payload);
 
     const { error } = await supabase.from("tbl_result").insert(payload);
 
-    if (error) throw error;
+    if (error) {
+      console.error("INSERT ERROR:", error);
+      throw error;
+    }
 
     return res.json({
       success: true,
