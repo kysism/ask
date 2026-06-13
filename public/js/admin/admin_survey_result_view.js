@@ -1,4 +1,4 @@
-const API = "/api/survey-response-detail";
+const API = "/api/survey-result/detail";
 
 const survey_id = new URLSearchParams(location.search).get("survey_id");
 const survey_submit_id = new URLSearchParams(location.search).get(
