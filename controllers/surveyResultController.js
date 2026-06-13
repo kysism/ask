@@ -1,8 +1,11 @@
 const supabase = require("../services/supabaseService");
 
+/* =========================
+   RESULT LIST
+========================= */
 exports.getResultBySurvey = async (req, res) => {
   try {
-    const { survey_id, org, class: class_id } = req.query;
+    const { survey_id, org, class: classParam } = req.query;
 
     let query = supabase.from("tbl_result").select(`
         survey_item_answer,
@@ -16,22 +19,18 @@ exports.getResultBySurvey = async (req, res) => {
         )
       `);
 
-    // =========================
-    // BASE FILTER (mandatory)
-    // =========================
+    // REQUIRED
     if (survey_id) {
       query = query.eq("survey_id", survey_id);
     }
 
-    // =========================
     // OPTIONAL FILTERS
-    // =========================
     if (org) {
       query = query.eq("org_id", org);
     }
 
-    if (class_id) {
-      query = query.eq("class_id", class_id);
+    if (classParam) {
+      query = query.eq("class_id", classParam);
     }
 
     const { data, error } = await query;
@@ -50,9 +49,12 @@ exports.getResultBySurvey = async (req, res) => {
   }
 };
 
+/* =========================
+   RESPONSE DETAIL (BY RESPONDENT)
+========================= */
 exports.getResultDetailByRespondent = async (req, res) => {
   try {
-    const { survey_id, org, class: class_id } = req.query;
+    const { survey_id, org, class: classParam } = req.query;
 
     let query = supabase.from("tbl_result").select(`
         survey_item_answer,
@@ -74,8 +76,8 @@ exports.getResultDetailByRespondent = async (req, res) => {
       query = query.eq("org_id", org);
     }
 
-    if (class_id) {
-      query = query.eq("class_id", class_id);
+    if (classParam) {
+      query = query.eq("class_id", classParam);
     }
 
     const { data, error } = await query;

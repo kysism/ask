@@ -74,13 +74,13 @@ function buildSurveyLink(id) {
    → org/class 포함하도록 수정
 ========================= */
 function buildResultLink(id) {
-  const org = document.getElementById("orgSelect").value;
-  const cls = document.getElementById("classSelect").value;
+  const org_id = document.getElementById("orgSelect").value;
+  const cls_id = document.getElementById("classSelect").value;
 
   let url = `${location.origin}/html/admin/admin_survey_result.html?survey_id=${id}`;
 
-  if (org) url += `&org=${org}`;
-  if (cls) url += `&class=${cls}`;
+  if (org) url += `&org_id=${org_id}`;
+  if (cls) url += `&class_id=${cls_id}`;
 
   return url;
 }
