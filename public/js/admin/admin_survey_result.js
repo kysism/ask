@@ -21,7 +21,7 @@ let rawData = [];
    RESPONSE KEY (guest_uuid ONLY)
 ========================= */
 function makeResponseKey(r) {
-  return r.guest_uuid ? `guest-${r.guest_uuid}` : null;
+  return r.guest_uuid ? `guest-${r.guest_uuid}` : "guest-unknown";
 }
 
 /* =========================
@@ -37,8 +37,8 @@ async function load() {
     const res = await fetch(`${API}?survey_id=${survey_id}`);
     const result = await res.json();
 
-    // ✔ guest_uuid 없는 데이터 제거
-    const data = (result.data || []).filter((r) => r.guest_uuid);
+    // ⚠️ guest_uuid 필터 제거 (중요)
+    const data = result.data || [];
 
     rawData = data;
 
@@ -63,8 +63,6 @@ async function load() {
 
       if (type === "S") {
         const val = Number(r.survey_item_answer || 0);
-
-        scoreMap[qName] = (scoreMap[qName] || 0) + val;
 
         if (!scoreDetail[qName]) {
           scoreDetail[qName] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -108,12 +106,13 @@ function buildRespondentSelect(data) {
 
   data.forEach((r) => {
     const key = makeResponseKey(r);
-    if (!key) return;
 
     if (!map[key]) {
       map[key] = {
         key,
-        label: `Guest ${r.guest_uuid}`,
+        label: r.guest_uuid
+          ? `Guest ${r.guest_uuid.slice(0, 8)}`
+          : "Guest unknown",
       };
     }
   });
@@ -121,17 +120,14 @@ function buildRespondentSelect(data) {
   const select = document.getElementById("respondentSelect");
   if (!select) return;
 
-  select.innerHTML = `
-    <option value="">Select Respondent</option>
-    ${Object.values(map)
+  select.innerHTML =
+    `<option value="">Select Respondent</option>` +
+    Object.values(map)
       .map((u) => `<option value="${u.key}">${u.label}</option>`)
-      .join("")}
-  `;
+      .join("");
 
   select.onchange = () => {
-    if (select.value) {
-      openRespondentModal(select.value);
-    }
+    if (select.value) openRespondentModal(select.value);
   };
 }
 
@@ -142,7 +138,9 @@ function openRespondentModal(key) {
   const modal = document.getElementById("modal");
   const frame = document.getElementById("modalFrame");
 
-  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(key)}&survey_id=${survey_id}`;
+  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(
+    key,
+  )}&survey_id=${survey_id}`;
 
   modal.style.display = "flex";
 }
@@ -182,8 +180,6 @@ function renderQuestionMap(map) {
    CHART
 ========================= */
 function renderChart(scoreDetail, questionMap) {
-  if (!Object.keys(scoreDetail).length) return;
-
   const ctx = el("chart")?.getContext("2d");
   if (!ctx) return;
 
@@ -211,21 +207,16 @@ function renderChart(scoreDetail, questionMap) {
    SCORE TABLE
 ========================= */
 function renderScoreTable(scoreDetail, questionMap) {
-  if (!Object.keys(scoreDetail).length) {
-    el("scoreTable").innerHTML = "";
-    return;
-  }
-
   let html = `
     <table class="result-table">
       <thead>
         <tr>
           <th>Question</th>
-          <th>1 Very Bad</th>
-          <th>2 Bad</th>
-          <th>3 Normal</th>
-          <th>4 Good</th>
-          <th>5 Very Good</th>
+          <th>1</th>
+          <th>2</th>
+          <th>3</th>
+          <th>4</th>
+          <th>5</th>
           <th>Total</th>
         </tr>
       </thead>

@@ -7,7 +7,7 @@ const key = new URLSearchParams(location.search).get("key");
    RESPONSE KEY (guest_uuid ONLY)
 ========================= */
 function makeResponseKey(r) {
-  return r.guest_uuid ? `guest-${r.guest_uuid}` : null;
+  return r.guest_uuid ? `guest-${r.guest_uuid}` : "guest-unknown";
 }
 
 /* =========================
@@ -18,7 +18,7 @@ async function load() {
     const res = await fetch(`${API}?survey_id=${survey_id}`);
     const result = await res.json();
 
-    const data = (result.data || []).filter((r) => r.guest_uuid);
+    const data = result.data || [];
 
     const filtered = data.filter((r) => makeResponseKey(r) === key);
 
