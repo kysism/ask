@@ -13,6 +13,11 @@ const SCORE_STYLE = {
 };
 
 /* =========================
+   RAW DATA (추가)
+========================= */
+let rawData = [];
+
+/* =========================
    LOAD
 ========================= */
 async function load() {
@@ -25,6 +30,16 @@ async function load() {
     const res = await fetch(`${API}?survey_id=${survey_id}`);
     const result = await res.json();
     const data = result.data || [];
+
+    /* =========================
+       RAW 저장 (추가)
+    ========================= */
+    rawData = data;
+
+    /* =========================
+       RESPONDENT SELECT 생성 (추가)
+    ========================= */
+    buildRespondentSelect(data);
 
     const scoreMap = {};
     const textMap = {};
@@ -86,6 +101,74 @@ async function load() {
     console.error(err);
     el("scoreTable").innerHTML = "Error loading data";
   }
+}
+
+/* =========================
+   RESPONDENT SELECT (추가)
+========================= */
+function buildRespondentSelect(data) {
+  const map = {};
+
+  data.forEach((r) => {
+    const id = r.survey_submit_id;
+
+    if (!map[id]) {
+      map[id] = {
+        id,
+        label: `Respondent ${id}`,
+      };
+    }
+  });
+
+  let select = document.getElementById("respondentSelect");
+
+  if (!select) {
+    /* 없으면 자동 생성 */
+    const topBar = document.querySelector(".card");
+    select = document.createElement("select");
+    select.id = "respondentSelect";
+    select.style.marginTop = "10px";
+    topBar.appendChild(select);
+  }
+
+  select.innerHTML = `
+    <option value="">Select Respondent</option>
+    ${Object.values(map)
+      .map((u) => `<option value="${u.id}">${u.label}</option>`)
+      .join("")}
+  `;
+
+  select.onchange = () => {
+    if (select.value) {
+      openRespondentModal(select.value);
+    }
+  };
+}
+
+/* =========================
+   MODAL OPEN (추가)
+========================= */
+function openRespondentModal(id) {
+  const modal = document.getElementById("modal");
+  const frame = document.getElementById("modalFrame");
+
+  frame.src =
+    `/admin/survey_response_view.html` +
+    `?survey_id=${survey_id}` +
+    `&survey_submit_id=${id}`;
+
+  modal.style.display = "flex";
+}
+
+/* =========================
+   MODAL CLOSE (추가)
+========================= */
+function closeModal() {
+  const modal = document.getElementById("modal");
+  const frame = document.getElementById("modalFrame");
+
+  modal.style.display = "none";
+  frame.src = "";
 }
 
 /* =========================

@@ -28,55 +28,61 @@
         border-bottom: 1px solid #e5e7eb;
       }
 
-      .text-group {
-        margin-bottom: 20px;
-      }
-
-      .answer-item {
-        display: flex;
-        gap: 10px;
-        padding: 10px;
-        background: #f9fafb;
-        border-radius: 8px;
-        margin-bottom: 6px;
-      }
-
-      .answer-number {
-        width: 24px;
-        height: 24px;
-        background: #2563eb;
-        color: #fff;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-      }
-
       .chart-box {
         height: 400px;
       }
 
-      .question-map {
+      .top-bar {
         display: flex;
-        flex-direction: column;
-        gap: 8px;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
       }
 
-      .q-item {
-        padding: 10px;
+      select {
+        padding: 8px;
+        min-width: 260px;
+        border: 1px solid #e5e7eb;
         border-radius: 8px;
-        background: #f9fafb;
-        border-left: 4px solid #2563eb;
-        font-size: 14px;
-        line-height: 1.5;
+        background: white;
       }
 
-      .q-code {
-        display: inline-block;
-        min-width: 50px;
-        font-weight: 700;
-        color: #2563eb;
+      /* MODAL */
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      .modal-content {
+        width: 90%;
+        height: 90%;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .modal-header {
+        padding: 10px;
+        background: #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .close-btn {
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      iframe {
+        width: 100%;
+        height: calc(100% - 45px);
+        border: none;
       }
     </style>
   </head>
@@ -84,41 +90,53 @@
   <body>
     <div class="container">
       <div class="card">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-          "
-        >
-          <h2 style="margin: 0">Survey Result</h2>
+        <h2>Survey Result</h2>
+
+        <!-- 응답자 선택 -->
+        <div class="top-bar">
+          <select id="respondentSelect">
+            <option value="">Select Respondent</option>
+          </select>
         </div>
       </div>
 
-      <!-- 차트 카드 -->
+      <!-- CHART -->
       <div id="chartCard" class="card chart-box">
         <canvas id="chart"></canvas>
       </div>
 
+      <!-- QUESTION LIST -->
       <div class="card">
         <h3>Question List</h3>
         <div id="questionBox"></div>
       </div>
 
-      <!-- 점수 카드 -->
-      <div id="scoreCard" class="card">
+      <!-- SCORE TABLE -->
+      <div class="card">
         <h3>Score Summary</h3>
         <div id="scoreTable"></div>
       </div>
 
+      <!-- TEXT ANSWERS -->
       <div class="card">
         <h3>Open Answers</h3>
         <div id="textBox"></div>
       </div>
     </div>
 
-    <script src="/js/common/authGuard.js"></script>
-    <script type="module" src="/js/admin/admin_survey_result.js"></script>
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>Response Detail</div>
+          <div class="close-btn" onclick="closeModal()">X</div>
+        </div>
+
+        <iframe id="modalFrame"></iframe>
+      </div>
+    </div>
+
+    <!-- JS -->
+    <script src="/js/admin/admin_survey_result_view.js"></script>
   </body>
 </html>
