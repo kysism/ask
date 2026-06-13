@@ -2,14 +2,14 @@ const API = "/api/survey-result";
 const survey_id = new URLSearchParams(location.search).get("survey_id");
 
 /* =========================
-   SCORE COLOR MAP (SYNC)
+   SCORE COLOR MAP
 ========================= */
 const SCORE_STYLE = {
-  1: "#ef4444", // Very Bad (red)
-  2: "#f97316", // Bad (orange)
-  3: "#eab308", // Normal (yellow)
-  4: "#22c55e", // Good (green)
-  5: "#2563eb", // Very Good (blue)
+  1: "#ef4444",
+  2: "#f97316",
+  3: "#eab308",
+  4: "#22c55e",
+  5: "#2563eb",
 };
 
 /* =========================
@@ -31,9 +31,6 @@ async function load() {
     const questionMap = {};
     const scoreDetail = {};
 
-    /* =========================
-       GROUP DATA
-    ========================= */
     data.forEach((r) => {
       const item = r.tbl_survey_item;
       if (!item) return;
@@ -41,7 +38,6 @@ async function load() {
       const qName = item.survey_item;
       const type = item.survey_item_type;
 
-      // question mapping (for Q1, Q2 ...)
       if (!questionMap[qName]) {
         const idx = Object.keys(questionMap).length + 1;
         questionMap[qName] = `Q${idx}`;
@@ -50,12 +46,16 @@ async function load() {
       if (type === "S") {
         const val = Number(r.survey_item_answer || 0);
 
-        // total score (for backward compatibility)
         scoreMap[qName] = (scoreMap[qName] || 0) + val;
 
-        // distribution per level
         if (!scoreDetail[qName]) {
-          scoreDetail[qName] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+          scoreDetail[qName] = {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+          };
         }
 
         if (val >= 1 && val <= 5) {
@@ -67,10 +67,21 @@ async function load() {
       }
     });
 
-    renderChart(scoreDetail, questionMap);
-    renderScoreTable(scoreDetail, questionMap);
+    const hasScoreData = Object.keys(scoreDetail).length > 0;
+
+    if (hasScoreData) {
+      renderChart(scoreDetail, questionMap);
+      renderScoreTable(scoreDetail, questionMap);
+    } else {
+      const chartCard = el("chartCard");
+      const scoreCard = el("scoreCard");
+
+      if (chartCard) chartCard.style.display = "none";
+      if (scoreCard) scoreCard.style.display = "none";
+    }
+
     renderText(textMap);
-    renderQuestionMap(questionMap, data);
+    renderQuestionMap(questionMap);
   } catch (err) {
     console.error(err);
     el("scoreTable").innerHTML = "Error loading data";
@@ -78,7 +89,7 @@ async function load() {
 }
 
 /* =========================
-   QUESTION MAP (RESTORED)
+   QUESTION MAP
 ========================= */
 function renderQuestionMap(map) {
   let html = `<div class="question-map">`;
@@ -101,18 +112,18 @@ function renderQuestionMap(map) {
    CHART
 ========================= */
 function renderChart(scoreDetail, questionMap) {
+  if (!Object.keys(scoreDetail).length) return;
+
   const ctx = el("chart")?.getContext("2d");
   if (!ctx) return;
 
   const labels = Object.keys(scoreDetail).map((q) => questionMap[q] || q);
 
-  const datasets = [1, 2, 3, 4, 5].map((level) => {
-    return {
-      label: `${level}`,
-      data: Object.keys(scoreDetail).map((q) => scoreDetail[q][level] || 0),
-      backgroundColor: SCORE_STYLE[level],
-    };
-  });
+  const datasets = [1, 2, 3, 4, 5].map((level) => ({
+    label: `${level}`,
+    data: Object.keys(scoreDetail).map((q) => scoreDetail[q][level] || 0),
+    backgroundColor: SCORE_STYLE[level],
+  }));
 
   new Chart(ctx, {
     type: "bar",
@@ -135,9 +146,14 @@ function renderChart(scoreDetail, questionMap) {
 }
 
 /* =========================
-   SCORE TABLE (Q1 STYLE + COLOR SYNC)
+   SCORE TABLE
 ========================= */
 function renderScoreTable(scoreDetail, questionMap) {
+  if (!Object.keys(scoreDetail).length) {
+    el("scoreTable").innerHTML = "";
+    return;
+  }
+
   let html = `
     <table class="result-table">
       <thead>
@@ -170,7 +186,10 @@ function renderScoreTable(scoreDetail, questionMap) {
     `;
   });
 
-  html += `</tbody></table>`;
+  html += `
+      </tbody>
+    </table>
+  `;
 
   el("scoreTable").innerHTML = html;
 }
