@@ -1,5 +1,10 @@
 const API = "/api/survey-result";
-const survey_id = new URLSearchParams(location.search).get("survey_id");
+
+const params = new URLSearchParams(location.search);
+
+const survey_id = params.get("survey_id");
+const org_id = params.get("org_id");
+const class_id = params.get("class_id");
 
 /* =========================
    SCORE COLOR MAP
@@ -34,17 +39,20 @@ async function load() {
       return;
     }
 
-    const res = await fetch(`${API}?survey_id=${survey_id}`);
+    const url =
+      `${API}?survey_id=${survey_id}` +
+      (org_id ? `&org_id=${org_id}` : "") +
+      (class_id ? `&class_id=${class_id}` : "");
+
+    const res = await fetch(url);
     const result = await res.json();
 
-    // ⚠️ guest_uuid 필터 제거 (중요)
     const data = result.data || [];
 
     rawData = data;
 
     buildRespondentSelect(data);
 
-    const scoreMap = {};
     const textMap = {};
     const questionMap = {};
     const scoreDetail = {};
@@ -138,9 +146,7 @@ function openRespondentModal(key) {
   const modal = document.getElementById("modal");
   const frame = document.getElementById("modalFrame");
 
-  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(
-    key,
-  )}&survey_id=${survey_id}`;
+  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(key)}&survey_id=${survey_id}`;
 
   modal.style.display = "flex";
 }
