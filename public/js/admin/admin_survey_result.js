@@ -21,12 +21,7 @@ let rawData = [];
    RESPONSE KEY 생성 (추가 핵심)
 ========================= */
 function makeResponseKey(r) {
-  const userKey = r.student_id || r.ip_address || "unknown";
-
-  const time = new Date(r.created_at);
-  time.setSeconds(Math.floor(time.getSeconds() / 10)); // 10초 단위 묶기
-
-  return `${userKey}_${time.toISOString().slice(0, 19)}`;
+  return r.student_id || r.ip_address || "guest";
 }
 
 /* =========================
@@ -148,9 +143,7 @@ function openRespondentModal(key) {
 
   const filtered = rawData.filter((r) => makeResponseKey(r) === key);
 
-  const encoded = encodeURIComponent(JSON.stringify(filtered));
-
-  frame.src = `/admin/survey_response_view.html` + `?data=${encoded}`;
+  frame.src = `/admin/admin_survey_response.html?key=${encodeURIComponent(key)}&survey_id=${survey_id}`;
 
   modal.style.display = "flex";
 }
