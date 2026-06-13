@@ -18,12 +18,10 @@ const SCORE_STYLE = {
 let rawData = [];
 
 /* =========================
-   RESPONSE KEY (SAFE + UNIFIED)
+   RESPONSE KEY (guest_uuid ONLY)
 ========================= */
 function makeResponseKey(r) {
-  if (r.student_id) return `student-${r.student_id}`;
-  if (r.guest_uuid) return `guest-${r.guest_uuid}`;
-  return null; // ❗ 중요: fallback 제거 (그룹 깨짐 방지)
+  return r.guest_uuid ? `guest-${r.guest_uuid}` : null;
 }
 
 /* =========================
@@ -38,7 +36,9 @@ async function load() {
 
     const res = await fetch(`${API}?survey_id=${survey_id}`);
     const result = await res.json();
-    const data = result.data || [];
+
+    // ✔ guest_uuid 없는 데이터 제거
+    const data = (result.data || []).filter((r) => r.guest_uuid);
 
     rawData = data;
 
@@ -63,6 +63,8 @@ async function load() {
 
       if (type === "S") {
         const val = Number(r.survey_item_answer || 0);
+
+        scoreMap[qName] = (scoreMap[qName] || 0) + val;
 
         if (!scoreDetail[qName]) {
           scoreDetail[qName] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -99,22 +101,19 @@ async function load() {
 }
 
 /* =========================
-   RESPONDENT SELECT (FIXED GROUPING)
+   RESPONDENT SELECT
 ========================= */
 function buildRespondentSelect(data) {
   const map = {};
 
   data.forEach((r) => {
     const key = makeResponseKey(r);
-
-    if (!key) return; // ❗ 핵심: null 제거
+    if (!key) return;
 
     if (!map[key]) {
       map[key] = {
         key,
-        label: r.student_id
-          ? `Student ${r.student_id}`
-          : `Guest ${r.guest_uuid?.slice(0, 8) || "unknown"}`,
+        label: `Guest ${r.guest_uuid}`,
       };
     }
   });
@@ -143,9 +142,7 @@ function openRespondentModal(key) {
   const modal = document.getElementById("modal");
   const frame = document.getElementById("modalFrame");
 
-  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(
-    key,
-  )}&survey_id=${survey_id}`;
+  frame.src = `/html/admin/admin_survey_response.html?key=${encodeURIComponent(key)}&survey_id=${survey_id}`;
 
   modal.style.display = "flex";
 }

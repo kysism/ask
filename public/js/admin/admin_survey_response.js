@@ -4,12 +4,10 @@ const survey_id = new URLSearchParams(location.search).get("survey_id");
 const key = new URLSearchParams(location.search).get("key");
 
 /* =========================
-   RESPONSE KEY (SAFE)
+   RESPONSE KEY (guest_uuid ONLY)
 ========================= */
 function makeResponseKey(r) {
-  if (r.student_id) return `student-${r.student_id}`;
-  if (r.guest_uuid) return `guest-${r.guest_uuid}`;
-  return null;
+  return r.guest_uuid ? `guest-${r.guest_uuid}` : null;
 }
 
 /* =========================
@@ -20,14 +18,14 @@ async function load() {
     const res = await fetch(`${API}?survey_id=${survey_id}`);
     const result = await res.json();
 
-    const data = result.data || [];
+    const data = (result.data || []).filter((r) => r.guest_uuid);
 
     const filtered = data.filter((r) => makeResponseKey(r) === key);
 
-    const box = document.getElementById("contents");
+    const contents = document.getElementById("contents");
 
-    if (!filtered.length) {
-      box.innerHTML = `<div class="question-card">No response found</div>`;
+    if (filtered.length === 0) {
+      contents.innerHTML = `<div class="question-card">No response found</div>`;
       return;
     }
 
@@ -45,7 +43,7 @@ async function load() {
       `;
     });
 
-    box.innerHTML = html;
+    contents.innerHTML = html;
   } catch (err) {
     console.error(err);
     document.getElementById("contents").innerHTML =
