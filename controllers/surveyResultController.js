@@ -6,6 +6,8 @@ exports.getResultBySurvey = async (req, res) => {
 
     let query = supabase.from("tbl_result").select(`
         survey_item_answer,
+        guest_uuid,
+        survey_id,
         tbl_survey_item(
           survey_item,
           survey_item_type
@@ -38,6 +40,8 @@ exports.getResultDetailByRespondent = async (req, res) => {
 
     let query = supabase.from("tbl_result").select(`
         survey_item_answer,
+        guest_uuid,
+        survey_id,
         tbl_survey_item(
           survey_item,
           survey_item_type
