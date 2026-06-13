@@ -135,14 +135,8 @@ exports.checkDuplicate = async (req, res) => {
 // =========================
 exports.submitSurvey = async (req, res) => {
   try {
-    const {
-      survey_id,
-      answers,
-      org_id: bodyOrg,
-      class_id: bodyClass,
-    } = req.body;
+    const { survey_id, guest_uuid, org_id, class_id, answers } = req.body;
 
-    // ⭐ URL query에서도 fallback 받기
     const org_id = bodyOrg || req.query.org_id || null;
     const class_id = bodyClass || req.query.class_id || null;
 
@@ -171,13 +165,15 @@ exports.submitSurvey = async (req, res) => {
       });
     }
 
-    const payload = Object.entries(answers).map(([item_id, value]) => ({
+    const payload = answers.map((a) => ({
       survey_id,
-      survey_item_id: Number(item_id),
-      survey_item_answer: value,
-      ip_address: ip,
+      survey_item_id: a.survey_item_id,
+      survey_item_answer: a.survey_item_answer,
+      ip_address: getClientIp(req),
+
       org_id,
       class_id,
+      guest_uuid,
     }));
 
     console.log("FINAL INSERT PAYLOAD:", payload);
