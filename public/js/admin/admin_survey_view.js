@@ -26,18 +26,16 @@ async function loadSurvey() {
 }
 
 /* =========================
-   LOAD META (ORG / CLASS / STUDENT)
+   LOAD META (ORG / CLASS )
 ========================= */
 async function loadMeta() {
-  const [orgRes, classRes, studentRes] = await Promise.all([
+  const [orgRes, classRes] = await Promise.all([
     fetch("/api/org"),
     fetch("/api/class"),
-    fetch("/api/student"),
   ]);
 
   const orgs = (await orgRes.json()).data || [];
   const classes = (await classRes.json()).data || [];
-  const students = (await studentRes.json()).data || [];
 
   document.getElementById("orgSelect").innerHTML =
     `<option value="">Select Organization</option>` +
@@ -51,11 +49,9 @@ async function loadMeta() {
       .map((c) => `<option value="${c.class_id}">${c.class_nm}</option>`)
       .join("");
 
-  document.getElementById("studentSelect").innerHTML =
-    `<option value="">Select Student</option>` +
-    students
-      .map((s) => `<option value="${s.student_id}">${s.student_nm}</option>`)
-      .join("");
+  // 🔥 추가: 선택 변경 시 링크 즉시 갱신
+  document.getElementById("orgSelect").onchange = updateLinks;
+  document.getElementById("classSelect").onchange = updateLinks;
 }
 
 /* =========================
@@ -64,15 +60,51 @@ async function loadMeta() {
 function buildSurveyLink(id) {
   const org = document.getElementById("orgSelect").value;
   const cls = document.getElementById("classSelect").value;
-  const student = document.getElementById("studentSelect").value;
 
   let url = `${location.origin}/html/client/survey_view.html?survey_id=${id}`;
 
   if (org) url += `&org=${org}`;
   if (cls) url += `&class=${cls}`;
-  if (student) url += `&student=${student}`;
 
   return url;
+}
+
+/* =========================
+   BUILD RESULT LINK (FIX)
+   → org/class 포함하도록 수정
+========================= */
+function buildResultLink(id) {
+  const org = document.getElementById("orgSelect").value;
+  const cls = document.getElementById("classSelect").value;
+
+  let url = `${location.origin}/html/admin/admin_survey_result.html?survey_id=${id}`;
+
+  if (org) url += `&org=${org}`;
+  if (cls) url += `&class=${cls}`;
+
+  return url;
+}
+
+/* =========================
+   UPDATE LINKS (핵심 추가)
+========================= */
+function updateLinks() {
+  if (!currentSurveyId) return;
+
+  surveyLink = buildSurveyLink(currentSurveyId);
+  resultLink = buildResultLink(currentSurveyId);
+
+  document.getElementById("linkBox").innerText = "Survey URL: " + surveyLink;
+
+  document.getElementById("resultBox").innerHTML = `
+    <div style="font-size:12px;">
+      <b>Result Page</b><br/>
+      <a href="${resultLink}" target="_blank"
+         style="color:#059669;font-weight:bold;">
+        Open Result Dashboard →
+      </a>
+    </div>
+  `;
 }
 
 /* =========================
@@ -106,21 +138,8 @@ window.selectSurvey = async function (id, title, el) {
 
   document.getElementById("questionList").innerHTML = html;
 
-  surveyLink = buildSurveyLink(id);
-
-  resultLink = `${location.origin}/html/admin/admin_survey_result.html?survey_id=${id}`;
-
-  document.getElementById("linkBox").innerText = "Survey URL: " + surveyLink;
-
-  document.getElementById("resultBox").innerHTML = `
-    <div style="font-size:12px;">
-      <b>Result Page</b><br/>
-      <a href="${resultLink}" target="_blank"
-         style="color:#059669;font-weight:bold;">
-        Open Result Dashboard →
-      </a>
-    </div>
-  `;
+  // 🔥 여기서도 항상 최신 링크 생성
+  updateLinks();
 };
 
 /* =========================
