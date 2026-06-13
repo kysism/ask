@@ -34,7 +34,7 @@ exports.getResultBySurvey = async (req, res) => {
 
 exports.getResultDetailByRespondent = async (req, res) => {
   try {
-    const { survey_id, survey_submit_id } = req.query;
+    const { survey_id } = req.query;
 
     let query = supabase.from("tbl_result").select(`
         survey_item_answer,
@@ -46,10 +46,6 @@ exports.getResultDetailByRespondent = async (req, res) => {
 
     if (survey_id) {
       query = query.eq("survey_id", survey_id);
-    }
-
-    if (survey_submit_id) {
-      query = query.eq("survey_submit_id", survey_submit_id);
     }
 
     const { data, error } = await query;
